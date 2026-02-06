@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recicladora 4R | Acceso al Sistema</title>
+    <style>
+        :root {
+            --verde-primario: #2e7d32;
+            --verde-oscuro: #1b5e20;
+            --gris-borde: #e0e0e0;
+            --gris-fondo: #f8f9fa;
+            --sombra: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        body { 
+            margin: 0; 
+            font-family: "Segoe UI", Roboto, sans-serif; 
+            background: var(--gris-fondo); 
+            color: #333; 
+            animation: fadeBody 1s ease-in; 
+        }
+
+        @keyframes fadeBody { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        
+        header { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background: #ffffff; 
+            padding: 25px; 
+            border-bottom: 4px solid var(--verde-primario); 
+            position: relative; 
+            animation: slideDown 0.8s ease-out;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .logo { position: absolute; left: 90px; }
+        .logo img { width: 120px; }
+        .titulo h1 { margin: 0; font-size: 30px; color: var(--verde-oscuro); font-weight: 800; }
+        .titulo p { margin-top: 5px; font-size: 14px; color: #666; }
+        
+        .login-container { 
+            background: white; 
+            max-width: 420px; 
+            margin: 60px auto; 
+            padding: 45px; 
+            border: 1px solid var(--gris-borde); 
+            border-radius: 12px; 
+            box-shadow: var(--sombra);
+            animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        
+        .login-container h2 { 
+            margin-top: 0; 
+            text-align: center; 
+            color: var(--verde-oscuro); 
+            font-size: 24px;
+            margin-bottom: 30px;
+            font-weight: 700;
+        }
+        
+        label { font-weight: 700; font-size: 13px; color: #444; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        input { 
+            width: 100%; 
+            padding: 12px 15px; 
+            margin: 8px 0 25px; 
+            border: 1.5px solid var(--gris-borde); 
+            box-sizing: border-box; 
+            border-radius: 8px; 
+            font-size: 15px;
+            transition: all 0.2s ease;
+            background: #fff;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--verde-primario);
+            box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.1);
+        }
+        
+        button { 
+            width: 100%; 
+            background: var(--verde-primario); 
+            color: white; 
+            border: none; 
+            padding: 14px; 
+            font-size: 16px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            transition: 0.3s; 
+            border-radius: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        button:hover { 
+            background: var(--verde-oscuro); 
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .olvido-pass {
+            display: block;
+            text-align: right;
+            margin-top: -15px;
+            margin-bottom: 25px;
+            font-size: 13px;
+            color: var(--verde-primario);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .olvido-pass:hover { text-decoration: underline; }
+        
+        .mensaje { 
+            text-align: center; 
+            margin-top: 20px; 
+            color: #c62828; 
+            font-weight: 600; 
+            font-size: 14px;
+            padding: 10px;
+            background: #ffebee;
+            border-radius: 6px;
+            display: none; 
+        }
+        
+        .links { 
+            text-align: center; 
+            margin-top: 30px; 
+            border-top: 1px solid #eee; 
+            padding-top: 25px; 
+        }
+        
+        .links p { font-size: 13px; color: #888; margin-bottom: 15px; font-weight: 500; }
+        
+        .btn-crear-cuenta {
+            display: block;
+            text-decoration: none;
+            background: #f1f8e9;
+            color: var(--verde-oscuro);
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 14px;
+            transition: 0.3s;
+            border: 1px solid #c8e6c9;
+            margin-bottom: 15px;
+        }
+        
+        .btn-crear-cuenta:hover { background: #e8f5e9; border-color: var(--verde-primario); }
+        
+        .btn-volver {
+            color: #777;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+        
+        .btn-volver:hover { color: var(--verde-primario); }
+
+        footer { 
+            background: var(--verde-oscuro); 
+            color: white; 
+            text-align: center; 
+            padding: 25px; 
+            margin-top: 60px; 
+            font-size: 13px; 
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo"><img src="logo.png" alt="Recicladora 4R"></div>
+    <div class="titulo">
+        <h1>Recicladora 4R</h1>
+        <p>Plataforma Institucional de Acceso</p>
+    </div>
+</header>
+
+<div class="login-container">
+    <h2>Iniciar Sesión</h2>
+    <form id="loginForm">
+        <label for="usuario">Usuario</label>
+        <input type="text" id="usuario" required>
+
+        <label for="clave">Contraseña</label>
+        <input type="password" id="clave" required>
+
+        <a href="/olvide_password" class="olvido-pass">¿Olvidaste tu contraseña?</a>
+
+        <button type="submit">Ingresar al Sistema</button>
+    </form>
+    
+    <div id="errorMsg" class="mensaje"></div>
+
+    <div class="links">
+        <p>¿Es su primera vez en el sistema?</p>
+        <a href="/registro" class="btn-crear-cuenta">Registrar nueva cuenta</a>
+        <a href="/" class="btn-volver">← Volver a la página principal</a>
+    </div>
+</div>
+
+<footer>
+    <p>© 2026 Recicladora 4R | Gestión Ambiental y Sostenibilidad</p>
+</footer>
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const usuario = document.getElementById('usuario').value.trim();
+    const clave = document.getElementById('clave').value.trim();
+    const errorMsg = document.getElementById('errorMsg');
+
+    errorMsg.style.display = 'none';
+    errorMsg.textContent = '';
+
+    try {
+        const res = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usuario, clave })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+            errorMsg.textContent = '❌ ' + (data.message || 'Credenciales incorrectas');
+            errorMsg.style.display = 'block';
+            return;
+        }
+
+        localStorage.setItem('id_usuario', data.userId);
+        window.location.href = data.redirect;
+
+    } catch (error) {
+        errorMsg.textContent = '⚠️ Error de conexión con el servidor';
+        errorMsg.style.display = 'block';
+    }
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recicladora 4R | Gestión Ambiental Profesional</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-green: #2e7d32;
+            --dark-green: #1b5e20;
+            --accent-gold: #c5a059;
+            --white: #ffffff;
+            --text-main: #2c3e50;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), 
+                        url('fondoA.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--text-main);
+            line-height: 1.8;
+            scroll-behavior: smooth;
+        }
+
+        /* ===== TOP BAR ===== */
+        .top-bar {
+            background: var(--dark-green);
+            color: white;
+            padding: 8px 10%;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            letter-spacing: 1px;
+        }
+
+        /* ===== HEADER CORPORATIVO ===== */
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 10%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-container img {
+            height: 70px;
+        }
+
+        .brand-text h1 {
+            margin: 0;
+            font-size: 24px;
+            color: var(--dark-green);
+            letter-spacing: -0.5px;
+        }
+
+        .brand-text p {
+            margin: 0;
+            font-size: 13px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+        }
+
+        /* ===== NAVEGACIÓN ===== */
+        nav {
+            display: flex;
+            gap: 30px;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 600;
+            font-size: 14px;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 0;
+            background-color: var(--primary-green);
+            transition: width 0.3s;
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        .btn-portal {
+            background: var(--primary-green);
+            color: white !important;
+            padding: 8px 20px;
+            border-radius: 4px;
+        }
+
+        /* ===== CONTENIDO PRINCIPAL ===== */
+        .container {
+            max-width: 1100px;
+            margin: 60px auto;
+            padding: 0 20px;
+        }
+
+        section {
+            background: white;
+            padding: 50px;
+            border-radius: 2px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border-top: 4px solid var(--primary-green);
+        }
+
+        h2 {
+            font-size: 28px;
+            color: var(--dark-green);
+            margin-bottom: 30px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+
+        /* Estilo para el contenedor del mapa */
+        .map-frame {
+            border: 1px solid #eee;
+            padding: 10px;
+            background: #fafafa;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            background: #1a1a1a;
+            color: #bdc3c7;
+            padding: 60px 10% 30px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .info-grid { grid-template-columns: 1fr; }
+            header { flex-direction: column; gap: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="top-bar">
+    <span>📍 Riobamba, Ecuador</span>
+    <span>📞 Contacto: (03) 2XXX-XXX | info@recicladora4r.com</span>
+</div>
+
+<header>
+    <div class="logo-container">
+        <img src="logo.png" alt="Logo Corporativo">
+        <div class="brand-text">
+            <h1>Recicladora 4R</h1>
+            <p>Soluciones Ambientales Integrales</p>
+        </div>
+    </div>
+    <nav>
+        <a href="#quienes">Institución</a>
+        <a href="#noticias">Comunicados</a>
+        <a href="#ubicacion">Ubicación</a>
+        <a href="login.html" class="btn-portal">Iniciar Sesión</a>
+    </nav>
+</header>
+
+<main class="container">
+
+    <section id="quienes">
+        <div class="info-grid">
+            <div>
+                <h2>Misión Institucional</h2>
+                <p>En <span style="color:var(--primary-green); font-weight:700;">Recicladora 4R</span>, nuestra labor se fundamenta en la excelencia operativa aplicada a la gestión de residuos sólidos. Nos comprometemos con el desarrollo sostenible de la región.</p>
+            </div>
+            <div>
+                <h2>Visión Estratégica</h2>
+                <p>Consolidarnos para el año 2030 como la entidad referente en economía circular del país, promoviendo una cultura de responsabilidad ambiental compartida.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="noticias">
+        <h2>Comunicados Oficiales</h2>
+        <div style="border-left: 2px solid #eee; padding-left: 20px;">
+            <p><strong>02 FEB 2026:</strong> Se informa la apertura del nuevo centro de acopio tecnológico.</p>
+            <p><strong>25 ENE 2026:</strong> Recicladora 4R recibe certificación de cumplimiento ambiental.</p>
+        </div>
+    </section>
+
+    <section id="ubicacion">
+        <div class="info-grid">
+            <div>
+                <h2>Ubicación Estratégica</h2>
+                <p>Nuestras instalaciones están equipadas para el procesamiento masivo de materiales reciclables. Puede visitarnos en nuestras oficinas centrales para gestionar convenios corporativos o entregas particulares.</p>
+                <p><strong>Dirección:</strong> Riobamba, Chimborazo - Ecuador.</p>
+                <p><strong>Horarios:</strong> Lunes a Viernes (08:00 - 17:00)</p>
+            </div>
+            <div class="map-frame">
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d5482.810373548087!2d-78.63731202106113!3d-1.6851796033121582!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91d3a9c17e3eddc3%3A0x5aa447ee72ed9df2!2sRecicladora%204R!5e0!3m2!1ses!2sec!4v1770085959794!5m2!1ses!2sec" width="100%" height="350" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<footer>
+    <div style="border-bottom: 1px solid #333; padding-bottom: 30px; margin-bottom: 30px;">
+        <p><strong>Recicladora 4R S.A.</strong></p>
+        <p>Expertos en remediación y logística ambiental.</p>
+    </div>
+    <p style="font-size: 12px;">© 2026 Todos los derechos reservados. Política de Privacidad.</p>
+</footer>
+
+</body>
+</html>

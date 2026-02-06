@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Recicladora 4R | Panel Administrador</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            animation: fadeBody 1s ease-in;
+        }
+        @keyframes fadeBody { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* HEADER */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            padding: 25px;
+            border-bottom: 4px solid #2e7d32;
+            position: relative;
+            animation: slideDown 0.8s ease-out;
+        }
+        .logo { position: absolute; left: 90px; }
+        .logo img { width: 120px; }
+        .titulo { text-align: center; }
+        .titulo h1 { margin: 0; font-size: 30px; color: #1b5e20; }
+        .titulo p { margin-top: 8px; font-size: 14px; color: #555; }
+
+        /* MENU */
+        .menu {
+            background: #2e7d32;
+            padding: 12px;
+            text-align: center;
+        }
+        .menu a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 600;
+            padding: 8px 14px;
+            display: inline-block;
+            transition: 0.3s;
+        }
+        .menu a:hover { background: #1b5e20; border-radius: 4px; }
+
+        /* CONTENIDO */
+        .contenido {
+            max-width: 1100px;
+            margin: 40px auto;
+            background: white;
+            padding: 40px;
+            border: 1px solid #ddd;
+            animation: slideUp 0.8s ease-out;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .contenido h2 { margin-top: 0; color: #2e7d32; }
+
+        /* ACCESOS RAPIDOS */
+        .cuadros {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        .card {
+            border: 1px solid #ddd;
+            padding: 25px;
+            text-align: center;
+            background: #f9f9f9;
+            transition: transform 0.3s ease;
+            border-radius: 4px;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-color: #2e7d32;
+        }
+        .card h3 { color: #2e7d32; margin-bottom: 15px; font-size: 18px; }
+        .card p { font-size: 13px; color: #555; height: 50px; }
+        .card a {
+            display: inline-block;
+            margin-top: 15px;
+            background: #2e7d32;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            border-radius: 4px;
+        }
+        .card a:hover { background: #1b5e20; }
+
+        footer {
+            background: #1b5e20;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 60px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo"><img src="logo.png" alt="Recicladora 4R"></div>
+    <div class="titulo">
+        <h1>Recicladora 4R</h1>
+        <p>Panel de Administración Maestro</p>
+    </div>
+</header>
+
+<div class="menu">
+    <a href="/panel_admin">Inicio</a>
+    <a href="/usuarios">Usuarios</a>
+    <a href="/productos">Inventario</a>
+    <a href="/gestionar_pedidos">Pedidos</a>
+    <a href="/gestion_ventas">Ofertas de Clientes</a> <a href="/reportes">Reportes</a>
+    <a href="/logout">Cerrar sesión</a>
+</div>
+
+<div class="contenido">
+    <h2 id="saludo">Bienvenido Administrador</h2>
+    <p>
+        Has iniciado sesión en el sistema central de <strong>Recicladora 4R</strong>. 
+        Desde este panel tienes control total sobre la operación comercial y logística de la empresa.
+    </p>
+
+    <div class="cuadros">
+        <div class="card">
+            <h3>Usuarios</h3>
+            <p>Control de acceso, roles y registro de personal.</p>
+            <a href="/usuarios">Ver Usuarios</a>
+        </div>
+
+        <div class="card" style="border-top: 4px solid #c5a059;"> <h3>Ofertas de Clientes</h3>
+            <p>Revisar y aprobar materiales que los clientes desean vendernos.</p>
+            <a href="/gestion_ventas" style="background: #c5a059;">Revisar Ofertas</a> </div>
+
+        <div class="card">
+            <h3>Inventario</h3>
+            <p>Carga de materiales, control de stock y pesos en KG.</p>
+            <a href="/productos">Gestionar Stock</a>
+        </div>
+
+        <div class="card">
+            <h3>Ventas y Pedidos</h3>
+            <p>Validar materiales recibidos y cambiar estados de pedidos.</p>
+            <a href="/gestionar_pedidos">Controlar Pedidos</a>
+        </div>
+
+        <div class="card">
+            <h3>Inteligencia</h3>
+            <p>Estadísticas de reciclaje, gráficas y metas logradas.</p>
+            <a href="/reportes">Ver Reportes</a>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <p>© 2026 Recicladora 4R | Panel Administrativo Institucional</p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Recicladora 4R | Mi Carrito</title>
+    <style>
+        /* DISEÑO Y ANIMACIONES DEL PANEL ORIGINAL */
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            animation: fadeBody 1s ease-in;
+        }
+        @keyframes fadeBody { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* HEADER IDENTICO */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            padding: 25px;
+            border-bottom: 4px solid #2e7d32;
+            position: relative;
+            animation: slideDown 0.8s ease-out;
+        }
+        .logo { position: absolute; left: 90px; }
+        .logo img { width: 120px; }
+        .titulo { text-align: center; }
+        .titulo h1 { margin: 0; font-size: 30px; color: #1b5e20; }
+        .titulo p { margin-top: 8px; font-size: 14px; color: #555; }
+
+        /* MENU UNIFICADO */
+        .menu {
+            background: #2e7d32;
+            padding: 12px;
+            text-align: center;
+        }
+        .menu a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 600;
+            padding: 8px 14px;
+            display: inline-block;
+            transition: 0.3s;
+        }
+        .menu a:hover { background: #1b5e20; }
+
+        /* CONTENIDO CON ANIMACIÓN */
+        .contenido {
+            max-width: 1000px;
+            margin: 40px auto;
+            background: white;
+            padding: 40px;
+            border: 1px solid #ddd;
+            animation: slideUp 0.8s ease-out;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .contenido h2 { margin-top: 0; color: #2e7d32; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+
+        /* TABLA DE CARRITO */
+        table { width: 100%; border-collapse: collapse; margin-top: 25px; }
+        table th { background: #f1f8e9; color: #1b5e20; padding: 15px; border-bottom: 2px solid #2e7d32; text-align: left; text-transform: uppercase; font-size: 13px; }
+        table td { padding: 15px; border-bottom: 1px solid #eee; }
+        .total-fila { background: #f9f9f9; font-weight: bold; font-size: 18px; }
+
+        /* ACCIONES */
+        .acciones { margin-top: 30px; display: flex; justify-content: space-between; }
+        .btn-vaciar { 
+            background: #c62828; 
+            color: white; 
+            padding: 12px 20px; 
+            font-weight: 600; 
+            border: none; 
+            cursor: pointer; 
+            border-radius: 4px;
+            transition: 0.3s;
+        }
+        .btn-vaciar:hover { background: #b71c1c; }
+        
+        .btn-finalizar { 
+            background: #2e7d32; 
+            color: white; 
+            padding: 12px 25px; 
+            font-weight: 600; 
+            border: none; 
+            cursor: pointer; 
+            border-radius: 4px;
+            transition: 0.3s;
+        }
+        .btn-finalizar:hover { background: #1b5e20; }
+
+        footer {
+            background: #1b5e20;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 60px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo"><img src="logo.png" alt="Recicladora 4R"></div>
+    <div class="titulo">
+        <h1>Recicladora 4R</h1>
+        <p>Tu Carrito de Reciclaje</p>
+    </div>
+</header>
+
+<div class="menu">
+    <a href="/panel_usuario">Catálogo</a>
+    <a href="/carrito">Carrito</a>
+    <a href="/mis_pedidos">Mis Pedidos</a>
+    <a href="/logout">Cerrar sesión</a>
+</div>
+
+<div class="contenido">
+    <h2>Revisa tu Solicitud</h2>
+    <div id="contenedor-carrito">
+        <table id="tabla-carrito" style="display:none;">
+            <thead>
+                <tr>
+                    <th>Material</th>
+                    <th>Cantidad</th>
+                    <th>Peso x Unidad</th>
+                    <th>Subtotal Peso</th>
+                </tr>
+            </thead>
+            <tbody id="cuerpo-tabla"></tbody>
+        </table>
+        
+        <div id="mensaje-vacio" style="text-align:center; padding:40px;">
+            <p style="font-size: 18px; color: #666;">Tu carrito está actualmente vacío.</p>
+            <a href="/panel_usuario" style="color:#2e7d32; font-weight:bold; text-decoration: none;">← Volver al catálogo</a>
+        </div>
+
+        <div class="acciones" id="botones-acciones" style="display:none;">
+            <button onclick="vaciarCarrito()" class="btn-vaciar">Vaciar Carrito</button>
+            <button onclick="confirmarPedido()" class="btn-finalizar">Confirmar y Enviar Pedido</button>
+        </div>
+    </div>
+</div>
+
+<footer><p>© 2026 Recicladora 4R | Gestión de Usuario Eco-Sostenible</p></footer>
+
+<script>
+    async function cargarCarrito() {
+        try {
+            const response = await fetch('/api/ver-carrito');
+            const data = await response.json();
+            
+            const cuerpo = document.getElementById('cuerpo-tabla');
+            const tabla = document.getElementById('tabla-carrito');
+            const mensaje = document.getElementById('mensaje-vacio');
+            const acciones = document.getElementById('botones-acciones');
+
+            if (data.items && data.items.length > 0) {
+                tabla.style.display = 'table';
+                acciones.style.display = 'flex';
+                mensaje.style.display = 'none';
+                cuerpo.innerHTML = '';
+                let total = 0;
+
+                data.items.forEach(item => {
+                    total += item.subtotal;
+                    cuerpo.innerHTML += `
+                        <tr>
+                            <td><strong>${item.nombre}</strong></td>
+                            <td>${item.cantidad} unidades</td>
+                            <td>${parseFloat(item.peso_kg).toFixed(2)} kg</td>
+                            <td style="color:#2e7d32; font-weight:bold;">${item.subtotal.toFixed(2)} kg</td>
+                        </tr>`;
+                });
+
+                cuerpo.innerHTML += `
+                    <tr class="total-fila">
+                        <td colspan="3" style="text-align:right; padding-right: 20px;">PESO TOTAL A RECICLAR:</td>
+                        <td style="color:#1b5e20;">${total.toFixed(2)} kg</td>
+                    </tr>`;
+            } else {
+                tabla.style.display = 'none';
+                acciones.style.display = 'none';
+                mensaje.style.display = 'block';
+            }
+        } catch (error) {
+            console.error("Error al cargar el carrito:", error);
+        }
+    }
+
+    async function vaciarCarrito() {
+        if(confirm("¿Estás seguro de que deseas limpiar tu carrito?")) {
+            await fetch('/api/vaciar-carrito', { method: 'POST' });
+            location.reload();
+        }
+    }
+
+    function confirmarPedido() {
+        // Redirige al proceso de guardado en base de datos
+        if(confirm("¿Deseas confirmar este envío de material?")) {
+            window.location.href = '/finalizar_pedido';
+        }
+    }
+
+    window.onload = cargarCarrito;
+</script>
+</body>
+</html>

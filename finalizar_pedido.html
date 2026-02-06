@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Recicladora 4R | Procesando Solicitud</title>
+    <style>
+        /* DISEÑO Y ANIMACIONES DEL PANEL ORIGINAL */
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            animation: fadeBody 1s ease-in;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        @keyframes fadeBody { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* HEADER IDENTICO */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            padding: 25px;
+            border-bottom: 4px solid #2e7d32;
+            position: relative;
+            animation: slideDown 0.8s ease-out;
+            width: 100%;
+        }
+        .logo { position: absolute; left: 90px; }
+        .logo img { width: 120px; }
+        .titulo { text-align: center; }
+        .titulo h1 { margin: 0; font-size: 30px; color: #1b5e20; }
+
+        /* CONTENIDO CENTRALIZADO */
+        .main-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .msg-box {
+            background: white;
+            padding: 50px;
+            border: 1px solid #ddd;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            animation: slideUp 0.8s ease-out;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border-radius: 8px;
+        }
+        
+        h2 { color: #2e7d32; margin-top: 0; }
+        p { color: #555; line-height: 1.6; }
+
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #2e7d32;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 30px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .btn-error {
+            display: none;
+            margin-top: 20px;
+            background: #c62828;
+            color: white;
+            padding: 12px 25px;
+            text-decoration: none;
+            font-weight: 600;
+            border-radius: 4px;
+            transition: 0.3s;
+        }
+        .btn-error:hover { background: #b71c1c; }
+
+        footer {
+            background: #1b5e20;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 14px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo"><img src="logo.png" alt="Recicladora 4R"></div>
+    <div class="titulo">
+        <h1>Recicladora 4R</h1>
+    </div>
+</header>
+
+<div class="main-container">
+    <div class="msg-box">
+        <h2 id="titulo">Procesando tu pedido...</h2>
+        <p id="texto">Estamos validando el stock de los materiales y registrando tu contribución ambiental en nuestro sistema.</p>
+        
+        <div id="loader" class="loader"></div>
+        
+        <p id="subtexto">Por favor, no cierres esta ventana.</p>
+        <a href="/carrito" id="btnRegresar" class="btn-error">Volver al Carrito</a>
+    </div>
+</div>
+
+<footer><p>© 2026 Recicladora 4R | Procesamiento Seguro de Datos</p></footer>
+
+<script>
+    async function enviarPedido() {
+        // 1. CAPTURAMOS EL ID DEL USUARIO DESDE EL NAVEGADOR
+        const userId = localStorage.getItem('id_usuario');
+
+        if (!userId) {
+            document.getElementById('titulo').innerText = "Sesión No Identificada";
+            document.getElementById('titulo').style.color = "#c62828";
+            document.getElementById('texto').innerText = "Debe iniciar sesión para finalizar una compra.";
+            document.getElementById('loader').style.display = "none";
+            document.getElementById('subtexto').innerText = "Redirigiendo al login...";
+            document.getElementById('btnRegresar').innerText = "Ir al Login";
+            document.getElementById('btnRegresar').href = "/login";
+            document.getElementById('btnRegresar').style.display = "inline-block";
+            setTimeout(() => { window.location.href = '/login'; }, 3000);
+            return;
+        }
+
+        try {
+            // 2. ENVIAMOS EL ID AL SERVIDOR (Esto soluciona el error de NULL)
+            const response = await fetch('/api/finalizar-pedido', { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_usuario: userId }) 
+            });
+            
+            const result = await response.json();
+
+            if (result.success) {
+                document.getElementById('titulo').innerText = "¡Pedido Confirmado!";
+                document.getElementById('texto').innerText = "Tu solicitud ha sido registrada con éxito. Gracias por reciclar con nosotros.";
+                document.getElementById('loader').style.display = "none";
+                document.getElementById('subtexto').innerHTML = "Generando comprobante... <br>Redirigiendo a tus pedidos.";
+                
+                setTimeout(() => {
+                    window.location.href = '/mis_pedidos'; 
+                }, 3000);
+            } else {
+                document.getElementById('titulo').innerText = "No se pudo procesar";
+                document.getElementById('titulo').style.color = "#c62828";
+                document.getElementById('loader').style.display = "none";
+                document.getElementById('texto').innerText = "Error: " + result.message;
+                document.getElementById('subtexto').innerText = "Verifique la disponibilidad del material.";
+                document.getElementById('btnRegresar').style.display = "inline-block";
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            document.getElementById('titulo').innerText = "Error de Conexión";
+            document.getElementById('loader').style.display = "none";
+            document.getElementById('texto').innerText = "No pudimos conectar con el servidor.";
+            document.getElementById('btnRegresar').style.display = "inline-block";
+        }
+    }
+
+    // Iniciar el proceso automáticamente al cargar
+    window.onload = enviarPedido;
+</script>
+</body>
+</html>

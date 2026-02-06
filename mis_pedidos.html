@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Recicladora 4R | Mis Pedidos</title>
+    <style>
+        /* DISEÑO Y ANIMACIONES DEL PANEL MAESTRO */
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            animation: fadeBody 1s ease-in;
+        }
+        @keyframes fadeBody { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            padding: 25px;
+            border-bottom: 4px solid #2e7d32;
+            position: relative;
+            animation: slideDown 0.8s ease-out;
+        }
+        .logo { position: absolute; left: 90px; }
+        .logo img { width: 120px; }
+        .titulo { text-align: center; }
+        .titulo h1 { margin: 0; font-size: 30px; color: #1b5e20; }
+
+        .menu {
+            background: #2e7d32;
+            padding: 12px;
+            text-align: center;
+        }
+        .menu a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 600;
+            padding: 8px 14px;
+            display: inline-block;
+            transition: 0.3s;
+        }
+        .menu a:hover { background: #1b5e20; border-radius: 4px; }
+
+        .contenido {
+            max-width: 900px;
+            margin: 40px auto;
+            background: white;
+            padding: 40px;
+            border: 1px solid #ddd;
+            animation: slideUp 0.8s ease-out;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border-radius: 8px;
+        }
+        .contenido h2 { color: #2e7d32; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+
+        .pedido-card {
+            border: 1px solid #eee;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-left: 6px solid #2e7d32;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fdfdfd;
+            border-radius: 4px;
+            transition: 0.3s;
+        }
+        .pedido-card:hover { transform: translateX(10px); box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
+
+        .info-pedido h3 { margin: 0; font-size: 18px; color: #1b5e20; }
+        .badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        .pendiente { background: #fff3e0; color: #ef6c00; }
+        .completado { background: #e8f5e9; color: #2e7d32; }
+        .cancelado { background: #ffebee; color: #c62828; }
+
+        .btn-ver {
+            background: #2e7d32;
+            color: white;
+            text-decoration: none;
+            padding: 10px 18px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .btn-ver:hover { background: #1b5e20; }
+
+        footer { background: #1b5e20; color: white; text-align: center; padding: 20px; margin-top: 60px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo"><img src="logo.png" alt="Recicladora 4R"></div>
+    <div class="titulo">
+        <h1>Recicladora 4R</h1>
+        <p>Historial de Mi Actividad Eco-Sostenible</p>
+    </div>
+</header>
+
+<div class="menu">
+    <a href="/panel_usuario">Catálogo</a>
+    <a href="/carrito">Carrito</a>
+    <a href="/mis_pedidos">Mis Pedidos</a>
+    <a href="/logout">Cerrar sesión</a>
+</div>
+
+<div class="contenido">
+    <h2>Listado de Pedidos Realizados</h2>
+    <p>Consulta el estado de tus entregas y el peso total reciclado.</p>
+    <div id="contenedor-pedidos">
+        </div>
+</div>
+
+<footer><p>© 2026 Recicladora 4R | Gestión de Usuario Institucional</p></footer>
+
+<script>
+    async function cargarHistorial() {
+        const contenedor = document.getElementById('contenedor-pedidos');
+        
+        // 1. CAPTURAMOS EL ID DEL USUARIO LOGUEADO
+        const idUsuario = localStorage.getItem('id_usuario');
+
+        if (!idUsuario) {
+            contenedor.innerHTML = '<p style="text-align:center; color:red;">Inicie sesión para ver su historial.</p>';
+            return;
+        }
+
+        try {
+            // 2. LLAMAMOS A LA RUTA ESPECÍFICA DE USUARIO
+            const res = await fetch(`/api/usuario/mis-pedidos/${idUsuario}`);
+            const pedidos = await res.json();
+            
+            if (!pedidos || pedidos.length === 0) {
+                contenedor.innerHTML = `
+                    <div style="text-align:center; padding:40px;">
+                        <p style="color:#888;">Aún no tienes pedidos registrados.</p>
+                        <a href="/panel_usuario" style="color:#2e7d32; font-weight:bold; text-decoration:none;">Ir al catálogo →</a>
+                    </div>`;
+                return;
+            }
+
+            contenedor.innerHTML = '';
+            pedidos.forEach(p => {
+                const estadoLimpio = p.estado ? p.estado.trim() : 'Pendiente';
+                const claseEstado = estadoLimpio.toLowerCase();
+
+                contenedor.innerHTML += `
+                    <div class="pedido-card">
+                        <div class="info-pedido">
+                            <h3>Folio #${String(p.id).padStart(5, '0')}</h3>
+                            <p><strong>Fecha:</strong> ${new Date(p.fecha).toLocaleDateString()}</p>
+                            <span class="badge ${claseEstado}">${estadoLimpio}</span>
+                        </div>
+                        <div style="text-align:right;">
+                            <p style="font-weight:bold; margin-bottom:12px; font-size: 20px; color:#2e7d32;">
+                                ${parseFloat(p.total_weight || p.total_peso || 0).toFixed(2)} kg
+                            </p>
+                            <a href="/ver_detalle?id=${p.id}" class="btn-ver">Ver Detalle</a>
+                        </div>
+                    </div>`;
+            });
+        } catch (error) {
+            console.error("Error:", error);
+            contenedor.innerHTML = '<p style="color:red; text-align:center;">Error al conectar con el historial.</p>';
+        }
+    }
+
+    window.onload = cargarHistorial;
+</script>
+</body>
+</html>

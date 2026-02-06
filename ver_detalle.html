@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Recicladora 4R | Detalle de Pedido</title>
+    <style>
+        body { margin: 0; font-family: "Segoe UI", sans-serif; background: #f5f5f5; color: #333; padding: 20px; }
+        .factura-wrapper { max-width: 850px; margin: 0 auto; background: white; border: 1px solid #ddd; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        
+        .header-factura { display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #2e7d32; padding-bottom: 20px; margin-bottom: 30px; }
+        .header-factura img { width: 130px; }
+        .header-factura .meta { text-align: right; }
+        .header-factura .meta h2 { margin: 0; color: #1b5e20; text-transform: uppercase; }
+
+        .seccion-info { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+        .caja { border: 1px solid #eee; padding: 15px; border-radius: 6px; background: #fcfcfc; }
+        .caja h4 { margin: 0 0 10px; color: #2e7d32; text-transform: uppercase; font-size: 13px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .caja p { margin: 4px 0; font-size: 14px; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #f1f8e9; color: #1b5e20; text-align: left; padding: 12px; border: 1px solid #e0e0e0; }
+        td { padding: 12px; border: 1px solid #eee; font-size: 14px; }
+
+        .footer-factura { text-align: right; border-top: 2px solid #2e7d32; padding-top: 20px; margin-top: 20px; }
+        .total-final { font-size: 24px; color: #1b5e20; font-weight: bold; }
+        
+        .firmas { margin-top: 60px; display: flex; justify-content: space-around; }
+        .firma-box { text-align: center; width: 200px; border-top: 1px solid #333; padding-top: 10px; font-weight: bold; font-size: 12px; }
+
+        .controles { text-align: center; margin-bottom: 20px; }
+        .btn-accion { background: #2e7d32; color: white; padding: 10px 20px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; text-decoration: none; }
+        
+        @media print { .no-print { display: none !important; } .factura-wrapper { border: none; box-shadow: none; width: 100%; } }
+    </style>
+</head>
+<body>
+
+    <div class="controles no-print">
+        <button class="btn-accion" onclick="window.print()">🖨️ Imprimir Factura</button>
+        <button class="btn-accion" style="background:#666;" onclick="history.back()">← Volver</button>
+    </div>
+
+    <div class="factura-wrapper">
+        <div class="header-factura">
+            <img src="logo.png" alt="Logo">
+            <div class="meta">
+                <h2>Nota de Recepción</h2>
+                <p><strong>Folio:</strong> #<span id="folio">000000</span></p>
+                <p><strong>Fecha:</strong> <span id="fecha">--/--/----</span></p>
+            </div>
+        </div>
+
+        <div class="seccion-info">
+            <div class="caja">
+                <h4>Datos del Cliente</h4>
+                <p><strong>Nombre:</strong> <span id="nombreCliente">---</span></p>
+                <p><strong>Email:</strong> <span id="emailCliente">---</span></p>
+                <p><strong>Teléfono:</strong> <span id="telCliente">---</span></p>
+            </div>
+            <div class="caja">
+                <h4>Ubicación de Entrega</h4>
+                <p><strong>Ciudad:</strong> <span id="ciudadCliente">---</span></p>
+                <p><strong>Provincia:</strong> <span id="provinciaCliente">---</span></p>
+                <p><strong>Dirección:</strong> <span id="dirCliente">---</span></p>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Material</th>
+                    <th style="text-align: center;">Cantidad</th>
+                    <th style="text-align: right;">Peso Subtotal</th>
+                </tr>
+            </thead>
+            <tbody id="detalleTabla"></tbody>
+        </table>
+
+        <div class="footer-factura">
+            <p style="margin: 0; font-size: 13px; color: #666;">PESO TOTAL NETO</p>
+            <div class="total-final"><span id="totalPeso">0.00</span> kg</div>
+        </div>
+
+        <div class="firmas">
+            <div class="firma-box">Despachado por Recicladora 4R</div>
+            <div class="firma-box">Recibido por el Cliente</div>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const idPedido = urlParams.get('id');
+
+        async function cargarDetalle() {
+            if (!idPedido) return;
+            try {
+                const res = await fetch(`/api/pedidos/detalle/${idPedido}`);
+                const data = await res.json();
+
+                // Llenar campos
+                document.getElementById('folio').innerText = data.pedido.id.toString().padStart(6, '0');
+                document.getElementById('fecha').innerText = new Date(data.pedido.fecha).toLocaleString();
+                document.getElementById('nombreCliente').innerText = data.pedido.nombre;
+                document.getElementById('emailCliente').innerText = data.pedido.correo;
+                document.getElementById('telCliente').innerText = data.pedido.telefono || 'N/A';
+                document.getElementById('ciudadCliente').innerText = data.pedido.ciudad;
+                document.getElementById('provinciaCliente').innerText = data.pedido.provincia;
+                document.getElementById('dirCliente').innerText = data.pedido.direccion;
+                document.getElementById('totalPeso').innerText = parseFloat(data.pedido.total_peso).toFixed(2);
+
+                const tabla = document.getElementById('detalleTabla');
+                data.detalles.forEach(d => {
+                    tabla.innerHTML += `
+                        <tr>
+                            <td>${d.material}</td>
+                            <td style="text-align: center;">${d.cantidad}</td>
+                            <td style="text-align: right;">${parseFloat(d.peso_subtotal).toFixed(2)} kg</td>
+                        </tr>`;
+                });
+            } catch (err) { console.error(err); }
+        }
+        window.onload = cargarDetalle;
+    </script>
+</body>
+</html>

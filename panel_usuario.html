@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Recicladora 4R | Panel de Usuario</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            animation: fadeBody 1s ease-in;
+        }
+        @keyframes fadeBody { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            padding: 25px;
+            border-bottom: 4px solid #2e7d32;
+            position: relative;
+            animation: slideDown 0.8s ease-out;
+        }
+        .logo { position: absolute; left: 90px; }
+        .logo img { width: 120px; }
+        .titulo h1 { margin: 0; font-size: 30px; color: #1b5e20; }
+        
+        .menu {
+            background: #2e7d32;
+            padding: 12px;
+            text-align: center;
+        }
+        .menu a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 600;
+            padding: 8px 14px;
+            display: inline-block;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        .menu a:hover { background: #1b5e20; border-radius: 4px; }
+
+        .contenido {
+            max-width: 1200px;
+            margin: 40px auto;
+            background: white;
+            padding: 40px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .contenido h2 { color: #2e7d32; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+
+        /* FORMULARIO VENTA */
+        .form-vender {
+            max-width: 600px;
+            margin: 20px auto;
+            display: grid;
+            gap: 15px;
+        }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group label { font-weight: bold; color: #1b5e20; }
+        .form-group input, .form-group select {
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+        .btn-vender {
+            background: #2e7d32;
+            color: white;
+            border: none;
+            padding: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        .btn-vender:hover { background: #1b5e20; }
+
+        /* CATALOGO */
+        .catalogo {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .card {
+            border: 1px solid #eee;
+            padding: 20px;
+            text-align: center;
+            background: #fafafa;
+            border-radius: 8px;
+        }
+        .card input { width: 60px; padding: 5px; margin-bottom: 10px; }
+        .card button { background: #2e7d32; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
+
+        footer { background: #1b5e20; color: white; text-align: center; padding: 20px; margin-top: 60px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo"><img src="logo.png" alt="Recicladora 4R"></div>
+    <div class="titulo"><h1>Recicladora 4R | Panel de Usuario</h1></div>
+</header>
+
+<div class="menu">
+    <a onclick="mostrarSeccion('catalogo-sec')">Comprar Materiales</a>
+    <a onclick="mostrarSeccion('vender-sec')">Vender mi Producto</a>
+    <a href="/carrito">🛒 Carrito</a>
+    <a href="/mis_pedidos">📋 Mis Pedidos</a>
+    <a href="/logout">Cerrar sesión</a>
+</div>
+
+<div class="contenido">
+    <div id="catalogo-sec">
+        <h2>Catálogo de Materiales Disponibles</h2>
+        <div class="catalogo" id="contenedor-productos"></div>
+    </div>
+
+    <div id="vender-sec" style="display: none;">
+        <h2>Vender mi Material a Recicladora 4R</h2>
+        <p>Complete todos los campos para que podamos procesar su oferta.</p>
+        
+        <form class="form-vender" id="formVenta">
+            <div class="form-group">
+                <label>Categoría</label>
+                <select id="v_categoria" required>
+                    <option value="">Seleccione una categoría...</option>
+                    <option value="Plástico">Plástico</option>
+                    <option value="Cartón/Papel">Cartón o Papel</option>
+                    <option value="Vidrio">Vidrio</option>
+                    <option value="Metal">Metal/Chatarra</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Nombre del Producto</label>
+                <input type="text" id="v_nombre" placeholder="Ej: Botellas PET" required>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="form-group">
+                    <label>Peso Estimado (kg)</label>
+                    <input type="number" id="v_peso" step="0.01" min="0.1" required>
+                </div>
+                <div class="form-group">
+                    <label>Precio Estimado ($)</label>
+                    <input type="number" id="v_precio" step="0.01" min="0.01" required>
+                </div>
+            </div>
+            <button type="submit" class="btn-vender" id="btnEnviarOferta">ENVIAR PROPUESTA DE VENTA</button>
+            <div id="msgVenta" style="margin-top: 15px; text-align: center;"></div>
+        </form>
+    </div>
+</div>
+
+<footer><p>© 2026 Recicladora 4R | Gestión Ambiental Sostenible</p></footer>
+
+<script>
+    function mostrarSeccion(id) {
+        document.getElementById('catalogo-sec').style.display = id === 'catalogo-sec' ? 'block' : 'none';
+        document.getElementById('vender-sec').style.display = id === 'vender-sec' ? 'block' : 'none';
+    }
+
+    async function cargarCatalogo() {
+        try {
+            const res = await fetch('/api/productos-cliente');
+            const productos = await res.json();
+            const contenedor = document.getElementById('contenedor-productos');
+            contenedor.innerHTML = '';
+            productos.forEach(p => {
+                contenedor.innerHTML += `
+                    <div class="card">
+                        <h3>${p.nombre}</h3>
+                        <p>Peso: ${p.peso_kg} kg | Stock: ${p.stock}</p>
+                        <input type="number" id="cant-${p.id}" min="1" max="${p.stock}" value="1">
+                        <button onclick="agregar(${p.id})">Agregar</button>
+                    </div>`;
+            });
+        } catch (e) { console.error(e); }
+    }
+
+    // --- LÓGICA DE VENTA CORREGIDA ---
+    document.getElementById('formVenta').onsubmit = async (e) => {
+        e.preventDefault();
+        const msg = document.getElementById('msgVenta');
+        const btn = document.getElementById('btnEnviarOferta');
+        
+        // 1. CAPTURAMOS EL ID DEL USUARIO DESDE EL NAVEGADOR
+        const idUsuario = localStorage.getItem('id_usuario');
+
+        if (!idUsuario) {
+            msg.innerHTML = "<span style='color:red;'>❌ Sesión no válida. Inicie sesión nuevamente.</span>";
+            return;
+        }
+
+        const datos = {
+            categoria: document.getElementById('v_categoria').value,
+            nombre: document.getElementById('v_nombre').value,
+            peso: document.getElementById('v_peso').value,
+            precio: document.getElementById('v_precio').value,
+            id_usuario: idUsuario // <--- ESTO VINCULA AL CLIENTE REAL
+        };
+
+        btn.disabled = true;
+        btn.innerText = "Enviando...";
+
+        try {
+            const res = await fetch('/api/vender-producto', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(datos)
+            });
+            const data = await res.json();
+            if(data.success) {
+                msg.innerHTML = "<span style='color:green;'>✅ ¡Propuesta enviada! Verá sus datos en la administración.</span>";
+                document.getElementById('formVenta').reset();
+            }
+        } catch (err) {
+            msg.innerHTML = "<span style='color:red;'>❌ Error de conexión.</span>";
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "ENVIAR PROPUESTA DE VENTA";
+        }
+    };
+
+    async function agregar(id) {
+        const cant = document.getElementById(`cant-${id}`).value;
+        const res = await fetch('/api/agregar-al-carrito', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ id_producto: id, cantidad: cant })
+        });
+        if((await res.json()).success) window.location.href = '/carrito';
+    }
+    
+    window.onload = cargarCatalogo;
+</script>
+</body>
+</html>

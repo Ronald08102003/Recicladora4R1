@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recicladora 4R | Gestión de Ofertas</title>
+    <style>
+        :root {
+            --verde-primario: #2e7d32;
+            --verde-oscuro: #1b5e20;
+            --gris-borde: #e0e0e0;
+            --gris-fondo: #f8f9fa;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: var(--gris-fondo);
+            color: #333;
+        }
+
+        /* HEADER */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            padding: 25px;
+            border-bottom: 4px solid var(--verde-primario);
+            position: relative;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .logo { position: absolute; left: 90px; }
+        .logo img { width: 120px; }
+        .titulo h1 { margin: 0; font-size: 30px; color: var(--verde-oscuro); }
+        
+        /* MENU */
+        .menu {
+            background: var(--verde-primario);
+            padding: 12px;
+            text-align: center;
+        }
+        .menu a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 600;
+            padding: 8px 14px;
+            display: inline-block;
+            transition: 0.3s;
+        }
+        .menu a:hover { background: var(--verde-oscuro); border-radius: 4px; }
+
+        /* CONTENIDO */
+        .contenido {
+            max-width: 1200px;
+            margin: 40px auto;
+            background: white;
+            padding: 40px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .contenido h2 { color: var(--verde-primario); border-bottom: 2px solid #eee; padding-bottom: 10px; }
+
+        /* TABLA DE GESTIÓN */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+        th {
+            background: #f1f8e9;
+            color: var(--verde-oscuro);
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+
+        .cliente-info b { color: var(--verde-oscuro); display: block; margin-bottom: 3px; }
+        .cliente-info small { color: #666; display: block; line-height: 1.4; }
+
+        .badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .pendiente { background: #fff3e0; color: #e65100; }
+        .aceptado { background: #e8f5e9; color: #2e7d32; }
+
+        .btn-accion {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            width: 100%;
+            margin-bottom: 5px;
+            transition: 0.2s;
+        }
+        .btn-aceptar { background: var(--verde-primario); color: white; }
+        .btn-imprimir { background: #1976d2; color: white; }
+        .btn-accion:hover { opacity: 0.8; transform: scale(1.02); }
+
+        footer {
+            background: var(--verde-oscuro);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 60px;
+        }
+
+        /* OCULTAR ELEMENTOS AL IMPRIMIR DESDE EL NAVEGADOR DIRECTO */
+        @media print {
+            .menu, header, footer, .btn-accion, p { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo"><img src="logo.png" alt="Recicladora 4R"></div>
+    <div class="titulo">
+        <h1>Recicladora 4R</h1>
+        <p>Sistema de Gestión de Recolección (Admin)</p>
+    </div>
+</header>
+
+<div class="menu">
+    <a href="/panel_admin">Inicio</a>
+    <a href="/usuarios">Usuarios</a>
+    <a href="/productos">Inventario</a>
+    <a href="/gestionar_pedidos">Pedidos</a>
+    <a href="/gestion_ventas" style="background: var(--verde-oscuro); border-radius: 4px;">Ofertas</a>
+    <a href="/reportes">Reportes</a>
+    <a href="/logout">Cerrar sesión</a>
+</div>
+
+<div class="contenido">
+    <h2>📦 Gestión de Propuestas de Venta</h2>
+    <p>A continuación se listan los materiales ofrecidos por los clientes para su recolección.</p>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Cliente y Ubicación</th>
+                <th>Material/Categoría</th>
+                <th>Peso Est.</th>
+                <th>Pago Est.</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="lista-ofertas">
+            </tbody>
+    </table>
+</div>
+
+<footer>
+    <p>© 2026 Recicladora 4R | Gestión Ambiental y Sostenibilidad</p>
+</footer>
+
+<script>
+    // 1. CARGAR LAS OFERTAS DESDE EL SERVIDOR
+    async function cargarOfertas() {
+        try {
+            const res = await fetch('/api/admin/propuestas-venta');
+            const ofertas = await res.json();
+            const tabla = document.getElementById('lista-ofertas');
+            tabla.innerHTML = '';
+
+            ofertas.forEach(o => {
+                const claseEstado = o.estado.toLowerCase();
+                
+                tabla.innerHTML += `
+                    <tr>
+                        <td>${new Date(o.fecha).toLocaleDateString()}</td>
+                        <td class="cliente-info">
+                            <b>👤 ${o.cliente || 'Usuario Externo'}</b>
+                            <small>📍 ${o.ciudad || 'N/A'}, ${o.provincia || 'N/A'}</small>
+                            <small>🏠 ${o.direccion || 'N/A'}</small>
+                            <small>📞 ${o.telefono || 'Sin teléfono'}</small>
+                        </td>
+                        <td>
+                            <b>${o.categoria}</b><br>
+                            <small>${o.nombre}</small>
+                        </td>
+                        <td>${o.peso_kg} kg</td>
+                        <td>$${o.precio_estimado}</td>
+                        <td><span class="badge ${claseEstado}">${o.estado}</span></td>
+                        <td>
+                            ${o.estado === 'Pendiente' ? `
+                                <button class="btn-accion btn-aceptar" onclick="cambiarEstado(${o.id}, 'Aceptado')">Aprobar</button>
+                            ` : ''}
+                            <button class="btn-accion btn-imprimir" onclick="imprimirFicha(${o.id})">🖨️ Ficha Retiro</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        } catch (error) {
+            console.error("Error al cargar ofertas:", error);
+        }
+    }
+
+    // 2. CAMBIAR ESTADO DE LA OFERTA
+    async function cambiarEstado(id, nuevoEstado) {
+        if(!confirm(`¿Desea marcar esta oferta como ${nuevoEstado}?`)) return;
+        
+        try {
+            const res = await fetch('/api/admin/propuestas-venta/estado', {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ id, estado: nuevoEstado })
+            });
+            if((await res.json()).success) {
+                cargarOfertas();
+            }
+        } catch (err) { alert("Error al actualizar el estado."); }
+    }
+
+    // 3. FUNCIÓN MAESTRA DE IMPRESIÓN CON LOGO
+    async function imprimirFicha(id) {
+        try {
+            const res = await fetch(`/api/admin/propuesta-detalle/${id}`);
+            const d = await res.json();
+
+            const ventana = window.open('', '_blank');
+            ventana.document.write(`
+                <html>
+                <head>
+                    <title>Ficha de Retiro #00${d.id}</title>
+                    <style>
+                        body { font-family: 'Segoe UI', sans-serif; padding: 40px; color: #333; line-height: 1.6; }
+                        .comprobante-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #2e7d32; padding-bottom: 20px; }
+                        .logo-img { width: 140px; height: auto; }
+                        .titulo-entidad { text-align: right; }
+                        .titulo-entidad h1 { color: #1b5e20; margin: 0; font-size: 26px; }
+                        .info-seccion { margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+                        .caja { border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: #fcfcfc; }
+                        .caja h3 { margin-top: 0; color: #2e7d32; font-size: 14px; text-transform: uppercase; border-bottom: 1px solid #eee; }
+                        .detalle-material { width: 100%; border-collapse: collapse; margin-top: 30px; }
+                        .detalle-material th { background: #f4f4f4; text-align: left; padding: 12px; border: 1px solid #ddd; color: #1b5e20; }
+                        .detalle-material td { padding: 12px; border: 1px solid #ddd; }
+                        .firmas { margin-top: 100px; display: flex; justify-content: space-around; }
+                        .firma-box { text-align: center; width: 220px; border-top: 1px solid #333; padding-top: 10px; font-weight: bold; font-size: 13px; }
+                        .no-print { text-align: center; margin-top: 30px; }
+                        @media print { .no-print { display: none; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="comprobante-header">
+                        <img src="logo.png" class="logo-img" alt="Recicladora 4R">
+                        <div class="titulo-entidad">
+                            <h1>RECICLADORA 4R</h1>
+                            <p><strong>ORDEN DE RETIRO #00${d.id}</strong></p>
+                            <small>Fecha: ${new Date().toLocaleString()}</small>
+                        </div>
+                    </div>
+
+                    <div class="info-seccion">
+                        <div class="caja">
+                            <h3>Datos del Cliente</h3>
+                            <p><strong>Nombre:</strong> ${d.cliente}</p>
+                            <p><strong>Teléfono:</strong> ${d.telefono || 'N/A'}</p>
+                            <p><strong>Correo:</strong> ${d.correo || 'N/A'}</p>
+                        </div>
+                        <div class="caja">
+                            <h3>Ubicación de Recolección</h3>
+                            <p><strong>Provincia:</strong> ${d.provincia}</p>
+                            <p><strong>Ciudad:</strong> ${d.ciudad}</p>
+                            <p><strong>Dirección:</strong> ${d.direccion}</p>
+                        </div>
+                    </div>
+
+                    <table class="detalle-material">
+                        <thead>
+                            <tr>
+                                <th>Categoría</th>
+                                <th>Descripción del Material</th>
+                                <th>Peso Declarado</th>
+                                <th>Monto Estimado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>${d.categoria}</td>
+                                <td>${d.nombre}</td>
+                                <td>${d.peso_kg} kg</td>
+                                <td>$${d.precio_estimado}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p style="margin-top: 20px; font-size: 12px; color: #555;">
+                        <b>Aviso:</b> El peso final y el pago se confirmarán tras el pesaje físico oficial.
+                    </p>
+
+                    <div class="firmas">
+                        <div class="firma-box">Responsable Recicladora 4R</div>
+                        <div class="firma-box">Firma del Cliente</div>
+                    </div>
+
+                    <div class="no-print">
+                        <button onclick="window.print()" style="padding: 12px 25px; background: #2e7d32; color: white; border: none; cursor: pointer; border-radius: 5px; font-weight: bold;">🖨️ IMPRIMIR COMPROBANTE</button>
+                    </div>
+                </body>
+                </html>
+            `);
+            ventana.document.close();
+        } catch (err) {
+            alert("No se pudo cargar la información de la ficha.");
+        }
+    }
+
+    window.onload = cargarOfertas;
+</script>
+</body>
+</html>

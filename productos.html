@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Recicladora 4R | Inventario</title>
+    <style>
+        /* DISEÑO Y ANIMACIONES DEL PANEL ORIGINAL */
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            animation: fadeBody 1s ease-in;
+        }
+        @keyframes fadeBody { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* HEADER IDENTICO AL PANEL */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            padding: 25px;
+            border-bottom: 4px solid #2e7d32;
+            position: relative;
+            animation: slideDown 0.8s ease-out;
+        }
+        .logo { position: absolute; left: 90px; }
+        .logo img { width: 120px; }
+        .titulo { text-align: center; }
+        .titulo h1 { margin: 0; font-size: 30px; color: #1b5e20; }
+        .titulo p { margin-top: 8px; font-size: 14px; color: #555; }
+
+        /* MENU UNIFICADO */
+        .menu {
+            background: #2e7d32;
+            padding: 12px;
+            text-align: center;
+        }
+        .menu a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 600;
+            padding: 8px 14px;
+            display: inline-block;
+            transition: background 0.3s;
+        }
+        .menu a:hover { background: #1b5e20; }
+
+        /* CONTENIDO CON ANIMACIÓN */
+        .contenido {
+            max-width: 1200px;
+            margin: 40px auto;
+            background: white;
+            padding: 40px;
+            border: 1px solid #ddd;
+            animation: slideUp 0.8s ease-out;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        h2 { color: #2e7d32; margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        
+        /* FORMULARIO */
+        .formulario { 
+            display: grid; 
+            grid-template-columns: 2fr 2fr 1fr 1fr 1fr; 
+            gap: 15px; 
+            margin-bottom: 30px; 
+            background: #f9f9f9; 
+            padding: 20px; 
+            border: 1px solid #eee;
+            border-radius: 4px;
+        }
+        input { padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        
+        button { 
+            background: #2e7d32; 
+            color: white; 
+            border: none; 
+            cursor: pointer; 
+            font-weight: 600; 
+            border-radius: 4px; 
+            transition: 0.3s; 
+        }
+        button:hover { background: #1b5e20; }
+        
+        /* TABLA */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px; border-bottom: 1px solid #ddd; text-align: center; }
+        th { background: #f1f8f4; color: #1b5e20; text-transform: uppercase; font-size: 13px; }
+        
+        .eliminar { 
+            background: #c62828; 
+            color: white; 
+            padding: 6px 10px; 
+            cursor: pointer; 
+            border-radius: 4px; 
+            border: none; 
+            font-size: 12px; 
+            transition: 0.3s;
+        }
+        .eliminar:hover { background: #b71c1c; }
+        
+        footer { 
+            background: #1b5e20; 
+            color: white; 
+            text-align: center; 
+            padding: 20px; 
+            margin-top: 60px; 
+            font-size: 14px; 
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo"><img src="logo.png" alt="Recicladora 4R"></div>
+    <div class="titulo">
+        <h1>Recicladora 4R</h1>
+        <p>Gestión de Inventario y Materiales</p>
+    </div>
+</header>
+
+<div class="menu">
+    <a href="/panel_admin">Inicio</a>
+    <a href="/usuarios">Usuarios</a>
+    <a href="/productos">Inventario</a>
+    <a href="/gestionar_pedidos">Pedidos</a>
+    <a href="/reportes">Reportes</a>
+    <a href="/logout">Cerrar sesión</a>
+</div>
+
+<div class="contenido">
+    <h2>Registrar Nuevo Material</h2>
+    <form id="formProducto" class="formulario">
+        <input type="text" id="nombre" placeholder="Nombre del material" required>
+        <input type="text" id="categoria" placeholder="Categoría">
+        <input type="number" id="stock" placeholder="Cantidad" min="0" required>
+        <input type="number" step="0.01" id="peso" placeholder="Peso (kg)" min="0" required>
+        <button type="submit">Agregar</button>
+    </form>
+
+    <h2>Inventario Actual</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Material</th>
+                <th>Categoría</th>
+                <th>Cantidad</th>
+                <th>Peso (kg)</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody id="tablaProductos">
+            </tbody>
+    </table>
+</div>
+
+<footer><p>© 2026 Recicladora 4R | Gestión Ambiental Maestro</p></footer>
+
+<script>
+    async function cargarProductos() {
+        try {
+            const res = await fetch('/api/admin/productos');
+            const productos = await res.json();
+            const tabla = document.getElementById('tablaProductos');
+            tabla.innerHTML = ''; 
+
+            productos.forEach(p => {
+                tabla.innerHTML += `
+                    <tr>
+                        <td>${p.id}</td>
+                        <td><strong>${p.nombre}</strong></td>
+                        <td>${p.categoria || '-'}</td>
+                        <td>${p.stock}</td>
+                        <td>${parseFloat(p.peso_kg).toFixed(2)} kg</td>
+                        <td>
+                            <button class="eliminar" onclick="eliminarProducto(${p.id})">Eliminar</button>
+                        </td>
+                    </tr>`;
+            });
+        } catch (error) {
+            console.error("Error al cargar productos:", error);
+        }
+    }
+
+    document.getElementById('formProducto').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const datos = {
+            nombre: document.getElementById('nombre').value,
+            categoria: document.getElementById('categoria').value,
+            stock: parseInt(document.getElementById('stock').value),
+            peso: parseFloat(document.getElementById('peso').value)
+        };
+
+        const res = await fetch('/api/admin/productos', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(datos)
+        });
+        
+        if(res.ok) {
+            e.target.reset();
+            cargarProductos();
+        } else {
+            alert("Error: Verifique que el stock sea mayor a 15.");
+        }
+    });
+
+    async function eliminarProducto(id) {
+        if(confirm('¿Seguro que desea eliminar este material?')) {
+            const res = await fetch(`/api/admin/productos/${id}`, { method: 'DELETE' });
+            if(res.ok) cargarProductos();
+        }
+    }
+
+    window.onload = cargarProductos;
+</script>
+</body>
+</html>
