@@ -23,23 +23,35 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// ================= RUTAS HTML (CORREGIDAS PARA RENDER) =================
-// Usamos path.resolve y los nombres EXACTOS con mayúsculas de tu proyecto
+// ================= RUTAS HTML (NORMALIZADAS PARA RENDER) =================
+
+// Ruta Principal
 app.get('/', (req, res) => res.sendFile(path.resolve(__dirname, 'Recicladora4R.html')));
+app.get('/Recicladora4R.html', (req, res) => res.redirect('/'));
+
+// Login
 app.get('/login', (req, res) => res.sendFile(path.resolve(__dirname, 'login.html')));
+app.get('/login.html', (req, res) => res.redirect('/login'));
+
+// Registro
 app.get('/registro', (req, res) => res.sendFile(path.resolve(__dirname, 'Registro.html')));
+app.get('/Registro.html', (req, res) => res.redirect('/registro'));
+
+// Olvidé Password
 app.get('/olvide_password', (req, res) => res.sendFile(path.resolve(__dirname, 'restablecer.html')));
-app.get('/panel_admin', (req, res) => res.sendFile(path.resolve(__dirname, 'panel.html')));
-app.get('/panel_usuario', (req, res) => res.sendFile(path.resolve(__dirname, 'panel_usuario.html')));
-app.get('/carrito', (req, res) => res.sendFile(path.resolve(__dirname, 'carrito.html')));
-app.get('/mis_pedidos', (req, res) => res.sendFile(path.resolve(__dirname, 'mis_pedidos.html')));
-app.get('/gestionar_pedidos', (req, res) => res.sendFile(path.resolve(__dirname, 'gestionar_pedidos.html')));
-app.get('/productos', (req, res) => res.sendFile(path.resolve(__dirname, 'productos.html')));
-app.get('/usuarios', (req, res) => res.sendFile(path.resolve(__dirname, 'usuarios.html')));
-app.get('/reportes', (req, res) => res.sendFile(path.resolve(__dirname, 'reportes.html')));
-app.get('/gestion_ventas', (req, res) => res.sendFile(path.resolve(__dirname, 'gestion_ventas.html')));
-app.get('/finalizar_pedido', (req, res) => res.sendFile(path.resolve(__dirname, 'finalizar_pedido.html')));
-app.get('/ver_detalle', (req, res) => res.sendFile(path.resolve(__dirname, 'ver_detalle.html')));
+app.get('/restablecer.html', (req, res) => res.redirect('/olvide_password'));
+
+// Paneles y Gestión (Mapeo automático para evitar errores 404)
+const paginas = [
+    'panel', 'panel_usuario', 'carrito', 'mis_pedidos', 
+    'gestionar_pedidos', 'productos', 'usuarios', 'reportes', 
+    'gestion_ventas', 'finalizar_pedido', 'ver_detalle'
+];
+
+paginas.forEach(pag => {
+    app.get(`/${pag}`, (req, res) => res.sendFile(path.resolve(__dirname, `${pag}.html`)));
+    app.get(`/${pag}.html`, (req, res) => res.redirect(`/${pag}`));
+});
 
 // ================= API LOGIN =================
 app.post('/api/login', async (req, res) => {
