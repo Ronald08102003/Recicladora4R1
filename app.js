@@ -1,3 +1,4 @@
+// app.js
 const express = require('express');
 const path = require('path');
 const pool = require('./db'); // conexión a PostgreSQL/Supabase
@@ -9,42 +10,52 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Servir archivos estáticos desde la raíz del proyecto
-app.use(express.static(__dirname));
-
 let carritoTemporal = {};
 
-// ================= CONFIGURACIÓN EMAIL (NODEMAILER) =================
+// ================= EMAIL =================
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER, // variable de entorno en Render
-        pass: process.env.EMAIL_PASS  // variable de entorno en Render
-    }
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER, // env variable en Render
+    pass: process.env.EMAIL_PASS  // env variable en Render
+  }
 });
 
 // ================= RUTAS HTML =================
-const htmlFiles = [
-  'Recicladora4R', 'login', 'Registro', 'restablecer',
-  'panel', 'panel_usuario', 'carrito', 'mis_pedidos',
-  'gestionar_pedidos', 'productos', 'usuarios', 'reportes',
-  'gestion_ventas', 'finalizar_pedido', 'ver_detalle'
+const rutasHTML = [
+  ['/', 'Recicladora4R.html'],
+  ['/login', 'login.html'],
+  ['/registro', 'Registro.html'],
+  ['/olvide_password', 'restablecer.html'],
+  ['/panel_admin', 'panel.html'],
+  ['/panel_usuario', 'panel_usuario.html'],
+  ['/carrito', 'carrito.html'],
+  ['/mis_pedidos', 'mis_pedidos.html'],
+  ['/gestionar_pedidos', 'gestionar_pedidos.html'],
+  ['/productos', 'productos.html'],
+  ['/usuarios', 'usuarios.html'],
+  ['/reportes', 'reportes.html'],
+  ['/gestion_ventas', 'gestion_ventas.html'],
+  ['/finalizar_pedido', 'finalizar_pedido.html'],
+  ['/ver_detalle', 'ver_detalle.html']
 ];
 
-htmlFiles.forEach(file => {
-    app.get(`/${file === 'Recicladora4R' ? '' : file.toLowerCase()}`, (req, res) => {
-        res.sendFile(path.join(__dirname, `${file}.html`));
-    });
+rutasHTML.forEach(([ruta, archivo]) => {
+  app.get(ruta, (req, res) => res.sendFile(path.join(__dirname, archivo)));
 });
 
-// ================= API LOGIN =================
+// ================= LOGIN =================
 app.post('/api/login', async (req, res) => {
     try {
         const { usuario, clave } = req.body;
+        console.log('Intento de login:', usuario);
+
         const result = await pool.query(
             'SELECT id, nombre, usuario, clave, rol FROM usuarios WHERE usuario = $1',
             [usuario]
         );
+
+        console.log('Resultado consulta:', result.rows);
 
         if (result.rows.length === 0) 
             return res.json({ success: false, message: 'Usuario no encontrado' });
@@ -59,19 +70,18 @@ app.post('/api/login', async (req, res) => {
             redirect: user.rol === 'admin' ? '/panel_admin' : '/panel_usuario'
         });
     } catch (err) {
-        console.error("❌ ERROR EN LOGIN:", err.message);
+        console.error("❌ ERROR EN LOGIN DETALLADO:", err);
         res.status(500).json({ success: false, message: 'Error de conexión con el servidor' });
     }
 });
 
-// ================= API REGISTRO =================
+// ================= REGISTRO =================
 app.post('/api/registro', async (req, res) => {
     try {
         const { nombre, correo, usuario, clave, telefono, provincia, ciudad, direccion } = req.body;
-        const check = await pool.query('SELECT id FROM usuarios WHERE usuario = $1 OR correo = $2', [usuario, correo]);
 
-        if (check.rows.length > 0) 
-            return res.json({ success: false, message: 'Usuario o correo ya existe' });
+        const check = await pool.query('SELECT id FROM usuarios WHERE usuario = $1 OR correo = $2', [usuario, correo]);
+        if (check.rows.length > 0) return res.json({ success: false, message: 'Usuario o correo ya existe' });
 
         await pool.query(`
             INSERT INTO usuarios (nombre, correo, usuario, clave, rol, telefono, provincia, ciudad, direccion)
@@ -80,6 +90,7 @@ app.post('/api/registro', async (req, res) => {
 
         res.json({ success: true });
     } catch (err) { 
+        console.error("❌ ERROR EN REGISTRO:", err);
         res.status(500).json({ success: false, message: err.message }); 
     }
 });
@@ -89,7 +100,10 @@ app.get('/api/productos-cliente', async (req, res) => {
     try {
         const result = await pool.query('SELECT id, nombre, peso_kg, stock FROM productos WHERE stock > 0');
         res.json(result.rows);
-    } catch (err) { res.status(500).send(err.message); }
+    } catch (err) { 
+        console.error("❌ ERROR PRODUCTOS:", err);
+        res.status(500).send(err.message); 
+    }
 });
 
 app.post('/api/agregar-al-carrito', (req, res) => {
@@ -127,6 +141,7 @@ app.post('/api/finalizar-pedido', async (req, res) => {
         res.json({ success: true });
     } catch (err) {
         await pool.query('ROLLBACK');
+        console.error("❌ ERROR FINALIZAR PEDIDO:", err);
         res.status(500).json({ success: false, message: err.message });
     }
 });
@@ -142,3 +157,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`✅ RECICLADORA 4R ACTIVA EN PUERTO ${PORT}`);
 });
+
