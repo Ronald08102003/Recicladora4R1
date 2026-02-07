@@ -1,8 +1,9 @@
+// db.js
 const { Pool } = require('pg');
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL, // La URL real de Postgres/Supabase
-  ssl: { rejectUnauthorized: false }         // Necesario en Render
+  connectionString: 'postgresql://postgres:h5BVoOWRqsvdl7lB@db.uncwomrludpermxhuxhq.supabase.co:5432/postgres',
+  ssl: { rejectUnauthorized: false } // obligatorio en Render
 });
 
 pool.connect(err => {
@@ -14,6 +15,5 @@ pool.connect(err => {
 });
 
 module.exports = pool;
-
 
 
