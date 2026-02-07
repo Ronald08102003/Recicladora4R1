@@ -10,15 +10,18 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Servir CSS, JS e imágenes desde la raíz
+app.use(express.static(__dirname));
+
 let carritoTemporal = {};
 
-// ================= EMAIL =================
+// ================= CONFIGURACIÓN EMAIL =================
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER, // env variable en Render
-    pass: process.env.EMAIL_PASS  // env variable en Render
-  }
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER, // variable de entorno en Render
+        pass: process.env.EMAIL_PASS  // variable de entorno en Render
+    }
 });
 
 // ================= RUTAS HTML =================
@@ -41,7 +44,10 @@ const rutasHTML = [
 ];
 
 rutasHTML.forEach(([ruta, archivo]) => {
-  app.get(ruta, (req, res) => res.sendFile(path.join(__dirname, archivo)));
+  app.get(ruta, (req, res) => {
+    console.log(`GET ${ruta} solicitado`);
+    res.sendFile(path.join(__dirname, archivo));
+  });
 });
 
 // ================= LOGIN =================
@@ -54,8 +60,6 @@ app.post('/api/login', async (req, res) => {
             'SELECT id, nombre, usuario, clave, rol FROM usuarios WHERE usuario = $1',
             [usuario]
         );
-
-        console.log('Resultado consulta:', result.rows);
 
         if (result.rows.length === 0) 
             return res.json({ success: false, message: 'Usuario no encontrado' });
@@ -70,7 +74,7 @@ app.post('/api/login', async (req, res) => {
             redirect: user.rol === 'admin' ? '/panel_admin' : '/panel_usuario'
         });
     } catch (err) {
-        console.error("❌ ERROR EN LOGIN DETALLADO:", err);
+        console.error("❌ ERROR EN LOGIN:", err);
         res.status(500).json({ success: false, message: 'Error de conexión con el servidor' });
     }
 });
