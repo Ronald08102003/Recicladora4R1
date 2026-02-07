@@ -9,7 +9,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Servir archivos estáticos desde la raíz del proyecto
+// Servir archivos estáticos directamente desde la raíz
 app.use(express.static(__dirname));
 
 let carritoTemporal = {};
@@ -23,18 +23,17 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// ================= RUTAS DE NAVEGACIÓN (CONSOLIDADO) =================
-// Estas rutas aseguran que el servidor entregue el HTML correcto
+// ================= RUTAS HTML (CORRECCIÓN ENOENT) =================
+// Usamos path.join(__dirname) para que Render encuentre los archivos físicos
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'Recicladora4R.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
 app.get('/registro', (req, res) => res.sendFile(path.join(__dirname, 'Registro.html')));
+app.get('/olvide_password', (req, res) => res.sendFile(path.join(__dirname, 'restablecer.html')));
 
-// Rutas de paneles vinculadas a tus archivos físicos
+// Paneles y Gestión
 app.get('/panel_admin', (req, res) => res.sendFile(path.join(__dirname, 'panel.html')));
 app.get('/panel_usuario', (req, res) => res.sendFile(path.join(__dirname, 'panel_usuario.html')));
-
-// Otras rutas de gestión
 app.get('/carrito', (req, res) => res.sendFile(path.join(__dirname, 'carrito.html')));
 app.get('/mis_pedidos', (req, res) => res.sendFile(path.join(__dirname, 'mis_pedidos.html')));
 app.get('/gestionar_pedidos', (req, res) => res.sendFile(path.join(__dirname, 'gestionar_pedidos.html')));
@@ -45,11 +44,11 @@ app.get('/gestion_ventas', (req, res) => res.sendFile(path.join(__dirname, 'gest
 app.get('/finalizar_pedido', (req, res) => res.sendFile(path.join(__dirname, 'finalizar_pedido.html')));
 app.get('/ver_detalle', (req, res) => res.sendFile(path.join(__dirname, 'ver_detalle.html')));
 
-// ================= API LOGIN (FUNCIONALIDAD COMPLETA) =================
+// ================= API LOGIN =================
 app.post('/api/login', async (req, res) => {
     try {
         const { usuario, clave } = req.body;
-        console.log(`Intentando acceso para: ${usuario}`); // Diagnóstico para Render
+        console.log(`Intento de login: ${usuario}`);
 
         const result = await pool.query(
             'SELECT id, nombre, usuario, clave, rol FROM usuarios WHERE usuario = $1',
@@ -61,20 +60,17 @@ app.post('/api/login', async (req, res) => {
         }
 
         const user = result.rows[0];
-        
-        // trim() elimina espacios accidentales que puedan venir de la BD o el input
         if (clave.trim() !== user.clave.trim()) {
             return res.json({ success: false, message: 'Clave incorrecta' });
         }
 
-        // Enviamos la ruta lógica que el frontend usará para redireccionar
         res.json({
             success: true,
             userId: user.id,
             redirect: user.rol === 'admin' ? '/panel_admin' : '/panel_usuario'
         });
     } catch (err) {
-        console.error("❌ ERROR DE CONEXIÓN BD:", err.message);
+        console.error("Error BD:", err.message);
         res.status(500).json({ success: false, message: 'Error de conexión con el servidor' });
     }
 });
@@ -100,7 +96,7 @@ app.post('/api/registro', async (req, res) => {
     }
 });
 
-// ================= GESTIÓN DE PRODUCTOS Y CARRITO =================
+// ================= PRODUCTOS Y CARRITO =================
 app.get('/api/productos-cliente', async (req, res) => {
     try {
         const result = await pool.query('SELECT id, nombre, peso_kg, stock FROM productos WHERE stock > 0');
@@ -147,7 +143,7 @@ app.get('/logout', (req, res) => {
     res.redirect('/login');
 });
 
-// ================= PUERTO DINÁMICO (PARA RENDER) =================
+// ================= PUERTO DINÁMICO =================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ RECICLADORA 4R ACTIVA EN PUERTO ${PORT}`);
