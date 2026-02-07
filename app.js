@@ -1,7 +1,7 @@
 // app.js
 const express = require('express');
 const path = require('path');
-const pool = require('./db');
+const pool = require('./db'); // Importa la conexión a Supabase/PostgreSQL
 const nodemailer = require('nodemailer');
 
 const app = express();
@@ -9,7 +9,7 @@ const app = express();
 // ================= CONFIGURACIÓN =================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(__dirname)); // sirve CSS, JS e imágenes desde la raíz
+app.use(express.static(__dirname)); // Sirve CSS, JS, imágenes desde la raíz
 
 let carritoTemporal = {};
 
@@ -17,7 +17,7 @@ let carritoTemporal = {};
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: process.env.EMAIL_USER, // poner en Render
+        user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     }
 });
@@ -89,7 +89,11 @@ app.post('/api/registro', async (req, res) => {
         correo = correo.trim().toLowerCase();
         clave = clave.trim();
 
-        const check = await pool.query('SELECT id FROM usuarios WHERE LOWER(usuario) = $1 OR LOWER(correo) = $2', [usuario, correo]);
+        const check = await pool.query(
+            'SELECT id FROM usuarios WHERE LOWER(usuario) = $1 OR LOWER(correo) = $2',
+            [usuario, correo]
+        );
+
         if (check.rows.length > 0) 
             return res.json({ success: false, message: 'Usuario o correo ya existe' });
 
@@ -172,4 +176,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ RECICLADORA 4R ACTIVA EN PUERTO ${PORT}`);
 });
+
 
