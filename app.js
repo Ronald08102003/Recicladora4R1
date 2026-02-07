@@ -1,7 +1,7 @@
 // app.js
 const express = require('express');
 const path = require('path');
-const pool = require('./db'); // conexión a PostgreSQL/Supabase
+const pool = require('./db');
 const nodemailer = require('nodemailer');
 
 const app = express();
@@ -9,9 +9,7 @@ const app = express();
 // ================= CONFIGURACIÓN =================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Servir CSS, JS e imágenes desde la raíz
-app.use(express.static(__dirname));
+app.use(express.static(__dirname)); // sirve CSS, JS e imágenes desde la raíz
 
 let carritoTemporal = {};
 
@@ -19,8 +17,8 @@ let carritoTemporal = {};
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: process.env.EMAIL_USER, // variable de entorno en Render
-        pass: process.env.EMAIL_PASS  // variable de entorno en Render
+        user: process.env.EMAIL_USER, // poner en Render
+        pass: process.env.EMAIL_PASS
     }
 });
 
@@ -44,20 +42,21 @@ const rutasHTML = [
 ];
 
 rutasHTML.forEach(([ruta, archivo]) => {
-  app.get(ruta, (req, res) => {
-    console.log(`GET ${ruta} solicitado`);
-    res.sendFile(path.join(__dirname, archivo));
-  });
+    app.get(ruta, (req, res) => {
+        console.log(`GET ${ruta} solicitado`);
+        res.sendFile(path.join(__dirname, archivo));
+    });
 });
 
 // ================= LOGIN =================
 app.post('/api/login', async (req, res) => {
     try {
-        const { usuario, clave } = req.body;
-        console.log('Intento de login:', usuario);
+        let { usuario, clave } = req.body;
+        usuario = usuario.trim().toLowerCase();
+        clave = clave.trim();
 
         const result = await pool.query(
-            'SELECT id, nombre, usuario, clave, rol FROM usuarios WHERE usuario = $1',
+            'SELECT id, nombre, usuario, clave, rol FROM usuarios WHERE LOWER(usuario) = $1',
             [usuario]
         );
 
@@ -65,8 +64,11 @@ app.post('/api/login', async (req, res) => {
             return res.json({ success: false, message: 'Usuario no encontrado' });
 
         const user = result.rows[0];
-        if (clave.trim() !== user.clave.trim()) 
+
+        if (clave !== user.clave.trim()) 
             return res.json({ success: false, message: 'Clave incorrecta' });
+
+        console.log('Login correcto:', user.usuario, 'Rol:', user.rol);
 
         res.json({
             success: true,
@@ -82,10 +84,14 @@ app.post('/api/login', async (req, res) => {
 // ================= REGISTRO =================
 app.post('/api/registro', async (req, res) => {
     try {
-        const { nombre, correo, usuario, clave, telefono, provincia, ciudad, direccion } = req.body;
+        let { nombre, correo, usuario, clave, telefono, provincia, ciudad, direccion } = req.body;
+        usuario = usuario.trim().toLowerCase();
+        correo = correo.trim().toLowerCase();
+        clave = clave.trim();
 
-        const check = await pool.query('SELECT id FROM usuarios WHERE usuario = $1 OR correo = $2', [usuario, correo]);
-        if (check.rows.length > 0) return res.json({ success: false, message: 'Usuario o correo ya existe' });
+        const check = await pool.query('SELECT id FROM usuarios WHERE LOWER(usuario) = $1 OR LOWER(correo) = $2', [usuario, correo]);
+        if (check.rows.length > 0) 
+            return res.json({ success: false, message: 'Usuario o correo ya existe' });
 
         await pool.query(`
             INSERT INTO usuarios (nombre, correo, usuario, clave, rol, telefono, provincia, ciudad, direccion)
@@ -99,7 +105,7 @@ app.post('/api/registro', async (req, res) => {
     }
 });
 
-// ================= PRODUCTOS Y CARRITO =================
+// ================= PRODUCTOS =================
 app.get('/api/productos-cliente', async (req, res) => {
     try {
         const result = await pool.query('SELECT id, nombre, peso_kg, stock FROM productos WHERE stock > 0');
@@ -110,6 +116,7 @@ app.get('/api/productos-cliente', async (req, res) => {
     }
 });
 
+// ================= CARRITO =================
 app.post('/api/agregar-al-carrito', (req, res) => {
     const { id_producto, cantidad } = req.body;
     carritoTemporal[id_producto] = (carritoTemporal[id_producto] || 0) + Number(cantidad);
@@ -120,6 +127,7 @@ app.post('/api/finalizar-pedido', async (req, res) => {
     const { id_usuario } = req.body;
     try {
         await pool.query('BEGIN');
+
         const pedido = await pool.query(
             'INSERT INTO pedidos (id_usuario, fecha, total_peso, estado) VALUES ($1,NOW(),0,$2) RETURNING id',
             [id_usuario, 'Pendiente']
@@ -132,15 +140,18 @@ app.post('/api/finalizar-pedido', async (req, res) => {
             const p = await pool.query('SELECT * FROM productos WHERE id = $1', [id]);
             const sub = p.rows[0].peso_kg * cant;
             total += sub;
+
             await pool.query(
                 'INSERT INTO detalle_pedidos (id_pedido, id_producto, cantidad, peso_subtotal) VALUES ($1,$2,$3,$4)',
                 [idPedido, id, cant, sub]
             );
+
             await pool.query('UPDATE productos SET stock = stock - $1 WHERE id = $2', [cant, id]);
         }
 
         await pool.query('UPDATE pedidos SET total_peso = $1 WHERE id = $2', [total, idPedido]);
         await pool.query('COMMIT');
+
         carritoTemporal = {};
         res.json({ success: true });
     } catch (err) {
@@ -158,7 +169,7 @@ app.get('/logout', (req, res) => {
 
 // ================= PUERTO DINÁMICO =================
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ RECICLADORA 4R ACTIVA EN PUERTO ${PORT}`);
 });
 
