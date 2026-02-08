@@ -40,15 +40,12 @@ app.get('/panel_admin', (req, res) => res.redirect('/panel'));
 // ================= LOGIN =================
 app.post('/api/login', async (req, res) => {
     const { usuario, clave } = req.body;
-
     const r = await pool.query(
         'SELECT id,nombre,usuario,clave,rol FROM usuarios WHERE usuario=$1',
         [usuario]
     );
-
     if (r.rows.length === 0)
         return res.json({ success:false,message:'Usuario no encontrado' });
-
     if (r.rows[0].clave.trim() !== clave.trim())
         return res.json({ success:false,message:'Clave incorrecta' });
 
@@ -62,12 +59,10 @@ app.post('/api/login', async (req, res) => {
 // ================= REGISTRO =================
 app.post('/api/registro', async (req, res) => {
     const { nombre,correo,usuario,clave,telefono,provincia,ciudad,direccion } = req.body;
-
     const check = await pool.query(
         'SELECT id FROM usuarios WHERE usuario=$1 OR correo=$2',
         [usuario,correo]
     );
-
     if (check.rows.length > 0)
         return res.json({ success:false });
 
@@ -76,12 +71,10 @@ app.post('/api/registro', async (req, res) => {
         (nombre,correo,usuario,clave,rol,telefono,provincia,ciudad,direccion)
         VALUES ($1,$2,$3,$4,'cliente',$5,$6,$7,$8)
     `,[nombre,correo,usuario,clave,telefono,provincia,ciudad,direccion]);
-
     res.json({ success:true });
 });
 
 // ================= PRODUCTOS / INVENTARIO =================
-
 app.get('/api/admin/productos', async (req, res) => {
     try {
         const r = await pool.query('SELECT * FROM productos ORDER BY id ASC');
@@ -130,7 +123,6 @@ app.get('/api/productos-cliente', async (req, res) => {
 });
 
 // ================= GESTIÓN DE PEDIDOS (ADMIN) =================
-
 app.get('/api/admin/pedidos', async (req, res) => {
     try {
         const r = await pool.query(`
@@ -156,7 +148,6 @@ app.put('/api/admin/pedidos/estado', async (req, res) => {
 });
 
 // ================= OFERTAS Y PROPUESTAS DE VENTA =================
-
 app.put('/api/admin/productos/oferta', async (req, res) => {
     const { id, oferta } = req.body;
     try {
@@ -167,7 +158,25 @@ app.put('/api/admin/productos/oferta', async (req, res) => {
     }
 });
 
-// NUEVA RUTA: Llena la tabla de "Gestión de Propuestas de Venta" (gestion_ventas.html)
+// Esta ruta llena la tabla de "Gestión de Propuestas de Venta" (Captura 2)
+app.get('/api/admin/ventas-propuestas', async (req, res) => {
+    try {
+        const r = await pool.query(`
+            SELECT p.fecha, u.nombre as cliente, u.ciudad as ubicacion, 
+            pr.nombre as material, p.total_peso as peso_est, p.estado 
+            FROM pedidos p
+            JOIN usuarios u ON p.id_usuario = u.id
+            JOIN detalle_pedidos dp ON dp.id_pedido = p.id
+            JOIN productos pr ON dp.id_producto = pr.id
+            ORDER BY p.fecha DESC
+        `);
+        res.json(r.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// NUEVA RUTA: Complemento para Proposals (Punto 3: Ubicación y Datos para el Admin)
 app.get('/api/admin/propuestas-venta', async (req, res) => {
     try {
         const r = await pool.query(`
@@ -186,7 +195,7 @@ app.get('/api/admin/propuestas-venta', async (req, res) => {
     }
 });
 
-// NUEVA RUTA: Detalle individual para la Ficha de Retiro
+// NUEVA RUTA: Detalle para Ficha de Retiro (Punto 4: Datos exactos Riobamba)
 app.get('/api/admin/propuesta-detalle/:id', async (req, res) => {
     try {
         const r = await pool.query(`
@@ -204,7 +213,6 @@ app.get('/api/admin/propuesta-detalle/:id', async (req, res) => {
     }
 });
 
-// RUTA PARA APROBAR OFERTA
 app.put('/api/admin/propuestas-venta/estado', async (req, res) => {
     const { id, estado } = req.body;
     try {
@@ -213,6 +221,14 @@ app.put('/api/admin/propuestas-venta/estado', async (req, res) => {
     } catch (err) {
         res.status(500).json({ success: false });
     }
+});
+
+app.post('/api/vender-producto', async (req, res) => {
+    const { categoria, nombre, peso, id_usuario } = req.body;
+    try {
+        await pool.query('INSERT INTO pedidos (id_usuario, fecha, total_peso, estado) VALUES ($1, NOW(), $2, \'Pendience\')', [id_usuario, peso]);
+        res.json({ success: true });
+    } catch (err) { res.status(500).json({ success: false }); }
 });
 
 app.get('/api/ofertas', async (req, res) => {
@@ -224,7 +240,7 @@ app.get('/api/ofertas', async (req, res) => {
     res.json(r.rows);
 });
 
-// ================= CARRITO Y PEDIDOS =================
+// ================= CARRITO =================
 app.post('/api/agregar-al-carrito', (req, res) => {
     const { id_producto, cantidad } = req.body;
     carritoTemporal[id_producto] =
@@ -232,6 +248,28 @@ app.post('/api/agregar-al-carrito', (req, res) => {
     res.json({ success:true });
 });
 
+app.get('/api/ver-carrito', async (req, res) => {
+    let items = [];
+    for (const id in carritoTemporal) {
+        const r = await pool.query('SELECT id, nombre, peso_kg FROM productos WHERE id=$1', [id]);
+        if(r.rows.length > 0) {
+            items.push({
+                nombre: r.rows[0].nombre,
+                cantidad: carritoTemporal[id],
+                peso_kg: r.rows[0].peso_kg,
+                subtotal: r.rows[0].peso_kg * carritoTemporal[id]
+            });
+        }
+    }
+    res.json({ items });
+});
+
+app.post('/api/vaciar-carrito', (req, res) => {
+    carritoTemporal = {};
+    res.json({ success: true });
+});
+
+// ================= FINALIZAR PEDIDO =================
 app.post('/api/finalizar-pedido', async (req, res) => {
     const { id_usuario } = req.body;
     try {
@@ -252,7 +290,6 @@ app.post('/api/finalizar-pedido', async (req, res) => {
                 (id_pedido,id_producto,cantidad,peso_subtotal)
                 VALUES ($1,$2,$3,$4)
             `,[pedido.rows[0].id,id,cant,sub]);
-
             await pool.query('UPDATE productos SET stock=stock-$1 WHERE id=$2',[cant,id]);
         }
         await pool.query('UPDATE pedidos SET total_peso=$1 WHERE id=$2',[total,pedido.rows[0].id]);
@@ -265,6 +302,7 @@ app.post('/api/finalizar-pedido', async (req, res) => {
     }
 });
 
+// ================= MIS PEDIDOS =================
 app.get('/api/mis-pedidos/:id', async (req, res) => {
     const r = await pool.query(`
         SELECT id,fecha,total_peso,estado
@@ -272,6 +310,11 @@ app.get('/api/mis-pedidos/:id', async (req, res) => {
         WHERE id_usuario=$1
         ORDER BY fecha DESC
     `,[req.params.id]);
+    res.json(r.rows);
+});
+
+app.get('/api/usuario/mis-pedidos/:id', async (req, res) => {
+    const r = await pool.query('SELECT id,fecha,total_peso,estado FROM pedidos WHERE id_usuario=$1 ORDER BY fecha DESC',[req.params.id]);
     res.json(r.rows);
 });
 
@@ -292,36 +335,7 @@ app.delete('/api/admin/usuarios/:id', async (req, res) => {
     res.json({ success:true });
 });
 
-// ================= REPORTES (ACTUALIZADO PARA reportes.html) =================
-
-app.get('/api/admin/reportes-detallados', async (req, res) => {
-    try {
-        // 1. Datos para cuadros de resumen
-        const pCount = await pool.query('SELECT COUNT(*) FROM productos');
-        const vCount = await pool.query('SELECT SUM(cantidad) FROM detalle_pedidos');
-        const pesoSum = await pool.query('SELECT SUM(total_peso) FROM pedidos');
-
-        // 2. Datos para la tabla de inventario y gráfica
-        const lista = await pool.query('SELECT nombre, stock, peso_kg FROM productos ORDER BY stock ASC');
-
-        res.json({
-            resumen: {
-                totalProductos: pCount.rows[0].count,
-                totalVentas: vCount.rows[0].sum || 0,
-                totalPeso: pesoSum.rows[0].sum || 0
-            },
-            listaProductos: lista.rows,
-            grafica: {
-                nombres: lista.rows.map(p => p.nombre),
-                stocks: lista.rows.map(p => p.stock)
-            }
-        });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// Ruta genérica para indicadores rápidos
+// ================= REPORTES (Punto 2: Gráficas dinámicas) =================
 app.get('/api/reportes', async (req, res) => {
     try {
         const materiales = await pool.query('SELECT COUNT(*) FROM productos');
@@ -331,15 +345,39 @@ app.get('/api/reportes', async (req, res) => {
             SELECT nombre as material, stock as stock_actual, peso_kg as peso_unitario, 
             CASE WHEN stock > 10 THEN 'Suficiente' ELSE 'Bajo' END as estado_stock FROM productos
         `);
+        const stockData = await pool.query('SELECT nombre, stock FROM productos');
         res.json({
             total_materiales: materiales.rows[0].count,
             unidades_recibidas: unidades.rows[0].sum || 0,
             peso_total: peso.rows[0].sum || 0,
-            inventario_auditoria: auditoria.rows
+            inventario_auditoria: auditoria.rows,
+            grafica_stock: stockData.rows
         });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.get('/api/admin/reportes', async (req, res) => {
+    try {
+        const pedidos = await pool.query('SELECT COUNT(*) FROM pedidos');
+        const peso = await pool.query('SELECT SUM(total_peso) FROM pedidos');
+        const clientes = await pool.query("SELECT COUNT(*) FROM usuarios WHERE rol='cliente'");
+        const porMes = await pool.query(`SELECT TO_CHAR(fecha, 'Month') as mes, SUM(total_peso) as peso FROM pedidos GROUP BY mes, EXTRACT(MONTH FROM fecha) ORDER BY EXTRACT(MONTH FROM fecha)`);
+        res.json({ total_pedidos: pedidos.rows[0].count, peso_total: peso.rows[0].sum || 0, total_clientes: clientes.rows[0].count, datos_mensuales: porMes.rows });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.get('/api/admin/reportes-detallados', async (req, res) => {
+    try {
+        const pCount = await pool.query('SELECT COUNT(*) FROM productos');
+        const vCount = await pool.query('SELECT SUM(cantidad) FROM detalle_pedidos');
+        const pesoSum = await pool.query('SELECT SUM(total_peso) FROM pedidos');
+        const lista = await pool.query('SELECT nombre, stock, peso_kg FROM productos ORDER BY stock ASC');
+        res.json({
+            resumen: { totalProductos: pCount.rows[0].count, totalVentas: vCount.rows[0].sum || 0, totalPeso: pesoSum.rows[0].sum || 0 },
+            listaProductos: lista.rows,
+            grafica: { nombres: lista.rows.map(p => p.nombre), stocks: lista.rows.map(p => p.stock) }
+        });
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // ================= LOGOUT Y SERVIDOR =================
