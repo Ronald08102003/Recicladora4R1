@@ -1,23 +1,21 @@
-PS C:\xampp\htdocs\Recicladora4R> node test-db.js
->>
-✅ CONEXIÓN OK SUPABASE: { now: 2026-02-08T16:18:42.497Z }
-✅ Consulta OK: [
-  {
-    id: 1,
-    nombre: 'Ronald Valdivieso',
-    correo: null,
-    usuario: 'ronald',
-    clave: '123456',
-    fecha_registro: 2026-01-13T22:37:11.513Z,
-    rol: 'admin',
-    telefono: null,
-    ciudad: null,
-    direccion: null,
-    provincia: null
-  }
-]
-PS C:\xampp\htdocs\Recicladora4R> 
+const { Pool } = require('pg');
 
+const pool = new Pool({
+  connectionString: 'postgresql://postgres.uncwomrludpermxhuxhq:eF4RSPGcfpnnyBlQ@aws-1-us-east-2.pooler.supabase.com:6543/postgres',
+  ssl: { rejectUnauthorized: false }
+});
+
+// prueba inmediata de conexión
+(async () => {
+  try {
+    const res = await pool.query('SELECT NOW()');
+    console.log('✅ CONEXIÓN OK SUPABASE:', res.rows[0]);
+  } catch (err) {
+    console.error('❌ ERROR DB:', err);
+  }
+})();
+
+module.exports = pool;
 
 
 
