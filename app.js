@@ -82,7 +82,6 @@ app.post('/api/registro', async (req, res) => {
 
 // ================= PRODUCTOS / INVENTARIO =================
 
-// NUEVO: Ruta para obtener productos que llena la tabla de inventario del admin
 app.get('/api/admin/productos', async (req, res) => {
     try {
         const r = await pool.query('SELECT * FROM productos ORDER BY id ASC');
@@ -92,7 +91,6 @@ app.get('/api/admin/productos', async (req, res) => {
     }
 });
 
-// NUEVO: Obtener todos los productos para la tabla del administrador
 app.get('/api/productos', async (req, res) => {
     try {
         const r = await pool.query('SELECT * FROM productos ORDER BY id ASC');
@@ -102,7 +100,6 @@ app.get('/api/productos', async (req, res) => {
     }
 });
 
-// NUEVO: Agregar material desde el panel
 app.post('/api/productos', async (req, res) => {
     const { nombre, categoria, stock, peso_kg } = req.body;
     try {
@@ -116,7 +113,6 @@ app.post('/api/productos', async (req, res) => {
     }
 });
 
-// NUEVO: Eliminar material de la tabla
 app.delete('/api/productos/:id', async (req, res) => {
     try {
         await pool.query('DELETE FROM productos WHERE id = $1', [req.params.id]);
@@ -135,7 +131,6 @@ app.get('/api/productos-cliente', async (req, res) => {
 
 // ================= GESTIÓN DE PEDIDOS (ADMIN) =================
 
-// NUEVO: Obtener todos los pedidos del sistema para el admin
 app.get('/api/admin/pedidos', async (req, res) => {
     try {
         const r = await pool.query(`
@@ -150,7 +145,6 @@ app.get('/api/admin/pedidos', async (req, res) => {
     }
 });
 
-// NUEVO: Cambiar estado de un pedido (Ej: de Pendiente a Recolectado)
 app.put('/api/admin/pedidos/estado', async (req, res) => {
     const { id, estado } = req.body;
     try {
@@ -162,6 +156,18 @@ app.put('/api/admin/pedidos/estado', async (req, res) => {
 });
 
 // ================= OFERTAS =================
+
+// NUEVO: Ruta para activar/desactivar ofertas desde el admin
+app.put('/api/admin/productos/oferta', async (req, res) => {
+    const { id, oferta } = req.body;
+    try {
+        await pool.query('UPDATE productos SET oferta=$1 WHERE id=$2', [oferta, id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false });
+    }
+});
+
 app.get('/api/ofertas', async (req, res) => {
     const r = await pool.query(`
         SELECT id,nombre,peso_kg,descuento
@@ -260,19 +266,27 @@ app.delete('/api/admin/usuarios/:id', async (req, res) => {
     res.json({ success:true });
 });
 
-// ================= REPORTES (ACTUALIZADO) =================
+// ================= REPORTES (CON DATOS PARA FIGURAS) =================
 
-// Esta es la ruta que tu página de reportes consultará para mostrar los números
 app.get('/api/reportes', async (req, res) => {
     try {
         const pedidos = await pool.query('SELECT COUNT(*) FROM pedidos');
         const peso = await pool.query('SELECT SUM(total_peso) FROM pedidos');
         const clientes = await pool.query("SELECT COUNT(*) FROM usuarios WHERE rol='cliente'");
 
+        // NUEVO: Datos para gráficas (Peso por categoría)
+        const porCategoria = await pool.query(`
+            SELECT p.categoria, SUM(dp.peso_subtotal) as total 
+            FROM detalle_pedidos dp 
+            JOIN productos p ON dp.id_producto = p.id 
+            GROUP BY p.categoria
+        `);
+
         res.json({
             total_pedidos: pedidos.rows[0].count,
             peso_total: peso.rows[0].sum || 0,
-            total_clientes: clientes.rows[0].count
+            total_clientes: clientes.rows[0].count,
+            grafica_categorias: porCategoria.rows
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -284,11 +298,20 @@ app.get('/api/admin/reportes', async (req, res) => {
         const pedidos = await pool.query('SELECT COUNT(*) FROM pedidos');
         const peso = await pool.query('SELECT SUM(total_peso) FROM pedidos');
         const clientes = await pool.query("SELECT COUNT(*) FROM usuarios WHERE rol='cliente'");
+        
+        // Datos adicionales para figuras/gráficas
+        const porMes = await pool.query(`
+            SELECT TO_CHAR(fecha, 'Month') as mes, SUM(total_peso) as peso 
+            FROM pedidos 
+            GROUP BY mes, EXTRACT(MONTH FROM fecha) 
+            ORDER BY EXTRACT(MONTH FROM fecha)
+        `);
 
         res.json({
             total_pedidos: pedidos.rows[0].count,
             peso_total: peso.rows[0].sum || 0,
-            total_clientes: clientes.rows[0].count
+            total_clientes: clientes.rows[0].count,
+            datos_mensuales: porMes.rows
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
