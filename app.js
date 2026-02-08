@@ -155,9 +155,8 @@ app.put('/api/admin/pedidos/estado', async (req, res) => {
     }
 });
 
-// ================= OFERTAS =================
+// ================= OFERTAS Y PROPUESTAS DE VENTA =================
 
-// NUEVO: Ruta para activar/desactivar ofertas desde el admin
 app.put('/api/admin/productos/oferta', async (req, res) => {
     const { id, oferta } = req.body;
     try {
@@ -165,6 +164,24 @@ app.put('/api/admin/productos/oferta', async (req, res) => {
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ success: false });
+    }
+});
+
+// Esta ruta llena la tabla de "Gestión de Propuestas de Venta" (Captura 2)
+app.get('/api/admin/ventas-propuestas', async (req, res) => {
+    try {
+        const r = await pool.query(`
+            SELECT p.fecha, u.nombre as cliente, u.ciudad as ubicacion, 
+            pr.nombre as material, p.total_peso as peso_est, p.estado 
+            FROM pedidos p
+            JOIN usuarios u ON p.id_usuario = u.id
+            JOIN detalle_pedidos dp ON dp.id_pedido = p.id
+            JOIN productos pr ON dp.id_producto = pr.id
+            ORDER BY p.fecha DESC
+        `);
+        res.json(r.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
 });
 
@@ -266,27 +283,32 @@ app.delete('/api/admin/usuarios/:id', async (req, res) => {
     res.json({ success:true });
 });
 
-// ================= REPORTES (CON DATOS PARA FIGURAS) =================
+// ================= REPORTES (PARA FIGURAS E INDICADORES) =================
 
 app.get('/api/reportes', async (req, res) => {
     try {
-        const pedidos = await pool.query('SELECT COUNT(*) FROM pedidos');
+        // Indicadores clave (Captura 3)
+        const materiales = await pool.query('SELECT COUNT(*) FROM productos');
+        const unidades = await pool.query('SELECT SUM(stock) FROM productos');
         const peso = await pool.query('SELECT SUM(total_peso) FROM pedidos');
-        const clientes = await pool.query("SELECT COUNT(*) FROM usuarios WHERE rol='cliente'");
 
-        // NUEVO: Datos para gráficas (Peso por categoría)
-        const porCategoria = await pool.query(`
-            SELECT p.categoria, SUM(dp.peso_subtotal) as total 
-            FROM detalle_pedidos dp 
-            JOIN productos p ON dp.id_producto = p.id 
-            GROUP BY p.categoria
+        // Inventario Detallado para Auditoría
+        const auditoria = await pool.query(`
+            SELECT nombre as material, stock as stock_actual, 
+            peso_kg as peso_unitario, 
+            CASE WHEN stock > 10 THEN 'Suficiente' ELSE 'Bajo' END as estado_stock
+            FROM productos
         `);
 
+        // Datos para Gráfica de Stock por Material
+        const stockData = await pool.query('SELECT nombre, stock FROM productos');
+
         res.json({
-            total_pedidos: pedidos.rows[0].count,
+            total_materiales: materiales.rows[0].count,
+            unidades_recibidas: unidades.rows[0].sum || 0,
             peso_total: peso.rows[0].sum || 0,
-            total_clientes: clientes.rows[0].count,
-            grafica_categorias: porCategoria.rows
+            inventario_auditoria: auditoria.rows,
+            grafica_stock: stockData.rows
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -299,7 +321,6 @@ app.get('/api/admin/reportes', async (req, res) => {
         const peso = await pool.query('SELECT SUM(total_peso) FROM pedidos');
         const clientes = await pool.query("SELECT COUNT(*) FROM usuarios WHERE rol='cliente'");
         
-        // Datos adicionales para figuras/gráficas
         const porMes = await pool.query(`
             SELECT TO_CHAR(fecha, 'Month') as mes, SUM(total_peso) as peso 
             FROM pedidos 
