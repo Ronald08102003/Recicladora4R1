@@ -4,76 +4,97 @@
     <meta charset="UTF-8">
     <title>Recicladora 4R | Mis Pedidos</title>
     <style>
-        /* DISEÑO Y ANIMACIONES DEL PANEL MAESTRO */
+        :root {
+            --verde-primario: #2e7d32;
+            --verde-oscuro: #1b5e20;
+            --gris-fondo: #f5f5f5;
+            --blanco: #ffffff;
+        }
+
         body {
             margin: 0;
             font-family: "Segoe UI", Arial, sans-serif;
-            background: #f5f5f5;
+            background: var(--gris-fondo);
             color: #333;
             animation: fadeBody 1s ease-in;
         }
+
         @keyframes fadeBody { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* HEADER UNIFICADO CON FLEXBOX */
         header {
             display: flex;
             align-items: center;
-            justify-content: center;
-            background: #ffffff;
-            padding: 25px;
-            border-bottom: 4px solid #2e7d32;
-            position: relative;
+            justify-content: space-between;
+            background: var(--blanco);
+            padding: 15px 5%;
+            border-bottom: 4px solid var(--verde-primario);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             animation: slideDown 0.8s ease-out;
         }
-        .logo { position: absolute; left: 90px; }
-        .logo img { width: 120px; }
-        .titulo { text-align: center; }
-        .titulo h1 { margin: 0; font-size: 30px; color: #1b5e20; }
 
+        .logo-container { flex: 1; }
+        .logo-container img { width: 100px; height: auto; display: block; }
+
+        .titulo-container { flex: 2; text-align: center; }
+        .titulo-container h1 { margin: 0; font-size: 26px; color: var(--verde-oscuro); text-transform: uppercase; }
+        .titulo-container p { margin: 5px 0 0; font-size: 14px; color: #666; }
+
+        header::after { content: ""; flex: 1; }
+
+        /* MENU IDENTICO AL PANEL */
         .menu {
-            background: #2e7d32;
-            padding: 12px;
-            text-align: center;
+            background: var(--verde-primario);
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
+
         .menu a {
             color: white;
             text-decoration: none;
-            margin: 0 15px;
+            padding: 15px 25px;
             font-weight: 600;
-            padding: 8px 14px;
-            display: inline-block;
             transition: 0.3s;
+            cursor: pointer;
         }
-        .menu a:hover { background: #1b5e20; border-radius: 4px; }
 
+        .menu a:hover { background: var(--verde-oscuro); }
+
+        /* CONTENIDO */
         .contenido {
             max-width: 900px;
             margin: 40px auto;
-            background: white;
+            background: var(--blanco);
             padding: 40px;
             border: 1px solid #ddd;
-            animation: slideUp 0.8s ease-out;
+            border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            border-radius: 8px;
+            animation: slideUp 0.8s ease-out;
         }
-        .contenido h2 { color: #2e7d32; border-bottom: 2px solid #eee; padding-bottom: 10px; }
 
+        .contenido h2 { color: var(--verde-primario); border-bottom: 2px solid #eee; padding-bottom: 10px; }
+
+        /* PEDIDO CARD */
         .pedido-card {
             border: 1px solid #eee;
             padding: 25px;
             margin-bottom: 20px;
-            border-left: 6px solid #2e7d32;
+            border-left: 6px solid var(--verde-primario);
             display: flex;
             justify-content: space-between;
             align-items: center;
             background: #fdfdfd;
-            border-radius: 4px;
+            border-radius: 8px;
             transition: 0.3s;
         }
         .pedido-card:hover { transform: translateX(10px); box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
 
-        .info-pedido h3 { margin: 0; font-size: 18px; color: #1b5e20; }
+        .info-pedido h3 { margin: 0; font-size: 18px; color: var(--verde-oscuro); }
+        
         .badge {
             padding: 6px 14px;
             border-radius: 20px;
@@ -84,38 +105,49 @@
             margin-top: 10px;
         }
         .pendiente { background: #fff3e0; color: #ef6c00; }
-        .completado { background: #e8f5e9; color: #2e7d32; }
+        .completado { background: #e8f5e9; color: var(--verde-primario); }
         .cancelado { background: #ffebee; color: #c62828; }
 
         .btn-ver {
-            background: #2e7d32;
+            background: var(--verde-primario);
             color: white;
             text-decoration: none;
             padding: 10px 18px;
-            border-radius: 4px;
+            border-radius: 6px;
             font-size: 13px;
             font-weight: bold;
             transition: 0.3s;
+            display: inline-block;
         }
-        .btn-ver:hover { background: #1b5e20; }
+        .btn-ver:hover { background: var(--verde-oscuro); }
 
-        footer { background: #1b5e20; color: white; text-align: center; padding: 20px; margin-top: 60px; }
+        footer {
+            background: var(--verde-oscuro);
+            color: white;
+            text-align: center;
+            padding: 25px;
+            margin-top: 60px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="logo"><img src="logo.png" alt="Recicladora 4R"></div>
-    <div class="titulo">
+    <div class="logo-container">
+        <img src="logo.png" alt="Recicladora 4R">
+    </div>
+    <div class="titulo-container">
         <h1>Recicladora 4R</h1>
         <p>Historial de Mi Actividad Eco-Sostenible</p>
     </div>
 </header>
 
 <div class="menu">
-    <a href="/panel_usuario">Catálogo</a>
-    <a href="/carrito">Carrito</a>
-    <a href="/mis_pedidos">Mis Pedidos</a>
+    <a href="/panel_usuario">Comprar Materiales</a>
+    <a href="/panel_usuario">Vender mi Producto</a>
+    <a href="/carrito">🛒 Carrito</a>
+    <a href="/mis_pedidos" style="background: var(--verde-oscuro);">📋 Mis Pedidos</a>
     <a href="/logout">Cerrar sesión</a>
 </div>
 
@@ -131,25 +163,23 @@
 <script>
     async function cargarHistorial() {
         const contenedor = document.getElementById('contenedor-pedidos');
-        
-        // 1. CAPTURAMOS EL ID DEL USUARIO LOGUEADO
         const idUsuario = localStorage.getItem('id_usuario');
 
         if (!idUsuario) {
-            contenedor.innerHTML = '<p style="text-align:center; color:red;">Inicie sesión para ver su historial.</p>';
+            contenedor.innerHTML = '<p style="text-align:center; color:red; padding:20px;">Inicie sesión para ver su historial.</p>';
             return;
         }
 
         try {
-            // 2. LLAMAMOS A LA RUTA ESPECÍFICA DE USUARIO
-            const res = await fetch(`/api/usuario/mis-pedidos/${idUsuario}`);
+            // Nota: Asegúrate de que esta ruta coincida con la que tienes en app.js
+            const res = await fetch(`/api/mis-pedidos/${idUsuario}`);
             const pedidos = await res.json();
             
             if (!pedidos || pedidos.length === 0) {
                 contenedor.innerHTML = `
                     <div style="text-align:center; padding:40px;">
                         <p style="color:#888;">Aún no tienes pedidos registrados.</p>
-                        <a href="/panel_usuario" style="color:#2e7d32; font-weight:bold; text-decoration:none;">Ir al catálogo →</a>
+                        <a href="/panel_usuario" style="color:var(--verde-primario); font-weight:bold; text-decoration:none;">Ir al catálogo →</a>
                     </div>`;
                 return;
             }
@@ -158,6 +188,7 @@
             pedidos.forEach(p => {
                 const estadoLimpio = p.estado ? p.estado.trim() : 'Pendiente';
                 const claseEstado = estadoLimpio.toLowerCase();
+                const peso = p.total_peso || p.total_weight || 0;
 
                 contenedor.innerHTML += `
                     <div class="pedido-card">
@@ -167,8 +198,8 @@
                             <span class="badge ${claseEstado}">${estadoLimpio}</span>
                         </div>
                         <div style="text-align:right;">
-                            <p style="font-weight:bold; margin-bottom:12px; font-size: 20px; color:#2e7d32;">
-                                ${parseFloat(p.total_weight || p.total_peso || 0).toFixed(2)} kg
+                            <p style="font-weight:bold; margin-bottom:12px; font-size: 20px; color:var(--verde-primario);">
+                                ${parseFloat(peso).toFixed(2)} kg
                             </p>
                             <a href="/ver_detalle?id=${p.id}" class="btn-ver">Ver Detalle</a>
                         </div>
