@@ -14,7 +14,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(session({
     secret: 'recicladora4r_secret',
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
+    cookie: { secure: false }
 }));
 
 // ================= BD =================
@@ -24,16 +25,11 @@ const pool = new Pool({
 });
 
 // ================= ARCHIVOS ESTÁTICOS =================
-// Servimos los archivos HTML que ya tienes en la raíz
+// Sirve HTML, CSS, JS, imágenes desde la raíz del proyecto
 app.use(express.static(__dirname));
 
-// ================= RUTA INICIO =================
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'Recicladora4R.html'));
-});
-
-// ================= LOGIN =================
-app.post('/login', async (req, res) => {
+// ================= LOGIN (API JSON) =================
+app.post('/api/login', async (req, res) => {
     const { usuario, clave } = req.body;
 
     try {
@@ -43,13 +39,14 @@ app.post('/login', async (req, res) => {
         );
 
         if (!r.rows.length) {
-            return res.redirect('/login.html?error=1');
+            return res.json({ success: false, message: 'Usuario no encontrado' });
         }
 
         const user = r.rows[0];
 
-        if (clave !== user.clave) {
-            return res.redirect('/login.html?error=1');
+        const valido = await bcrypt.compare(clave, user.clave);
+        if (!valido) {
+            return res.json({ success: false, message: 'Contraseña incorrecta' });
         }
 
         req.session.usuario = {
@@ -58,15 +55,20 @@ app.post('/login', async (req, res) => {
             rol: user.rol
         };
 
-        if (user.rol === 'admin') {
-            res.redirect('/panel.html');
-        } else {
-            res.redirect('/usuario.html');
-        }
+        res.json({
+            success: true,
+            userId: user.id,
+            redirect: user.rol === 'admin'
+                ? '/panel.html'
+                : '/usuario.html'
+        });
 
     } catch (err) {
-        console.error(err);
-        res.redirect('/login.html?error=1');
+        console.error('❌ LOGIN:', err.message);
+        res.status(500).json({
+            success: false,
+            message: 'Error del servidor'
+        });
     }
 });
 
@@ -78,7 +80,7 @@ app.get('/api/session', (req, res) => {
     res.json({ logged: true, usuario: req.session.usuario });
 });
 
-// ================= USUARIOS (ADMIN) =================
+// ================= USUARIOS =================
 app.get('/api/usuarios', async (req, res) => {
     try {
         const r = await pool.query('SELECT * FROM usuarios ORDER BY id');
@@ -112,7 +114,6 @@ app.get('/api/inventario', async (req, res) => {
             GROUP BY p.id, p.nombre
             ORDER BY p.nombre
         `);
-
         res.json(r.rows);
     } catch (err) {
         console.error('❌ INVENTARIO:', err.message);
@@ -136,7 +137,7 @@ app.post('/api/pedidos', async (req, res) => {
 
         const id_pedido = pedido.rows[0].id;
 
-        for (let m of materiales) {
+        for (const m of materiales) {
             await pool.query(`
                 INSERT INTO detalle_pedidos
                 (id_pedido, id_producto, cantidad, peso_subtotal)
@@ -152,71 +153,48 @@ app.post('/api/pedidos', async (req, res) => {
     }
 });
 
-// ================= MIS PEDIDOS (USUARIO) =================
+// ================= MIS PEDIDOS =================
 app.get('/api/usuario/mis-pedidos/:id', async (req, res) => {
-    const { id } = req.params;
-
     try {
         const r = await pool.query(`
-            SELECT 
-                id,
-                fecha,
-                total_peso,
-                estado
+            SELECT id, fecha, total_peso, estado
             FROM pedidos
             WHERE id_usuario = $1
             ORDER BY fecha DESC
-        `, [id]);
-
+        `, [req.params.id]);
         res.json(r.rows);
     } catch (err) {
-        console.error('❌ MIS PEDIDOS:', err.message);
         res.status(500).json([]);
     }
 });
 
-// ================= DETALLE DE PEDIDO =================
+// ================= DETALLE PEDIDO =================
 app.get('/api/pedidos/detalle/:id', async (req, res) => {
-    const { id } = req.params;
-
     try {
         const pedido = await pool.query(`
-            SELECT 
-                p.id,
-                p.fecha,
-                p.total_peso,
-                u.nombre,
-                u.correo,
-                u.telefono,
-                u.ciudad,
-                u.provincia,
-                u.direccion
+            SELECT p.id, p.fecha, p.total_peso,
+                   u.nombre, u.correo, u.telefono,
+                   u.ciudad, u.provincia, u.direccion
             FROM pedidos p
             JOIN usuarios u ON u.id = p.id_usuario
             WHERE p.id = $1
-        `, [id]);
+        `, [req.params.id]);
 
         if (!pedido.rows.length) {
             return res.status(404).json({ error: 'Pedido no encontrado' });
         }
 
         const detalles = await pool.query(`
-            SELECT 
-                pr.nombre AS material,
-                d.cantidad,
-                d.peso_subtotal
+            SELECT pr.nombre AS material,
+                   d.cantidad, d.peso_subtotal
             FROM detalle_pedidos d
             JOIN productos pr ON pr.id = d.id_producto
             WHERE d.id_pedido = $1
-        `, [id]);
+        `, [req.params.id]);
 
-        res.json({
-            pedido: pedido.rows[0],
-            detalles: detalles.rows
-        });
+        res.json({ pedido: pedido.rows[0], detalles: detalles.rows });
 
     } catch (err) {
-        console.error('❌ DETALLE PEDIDO:', err.message);
         res.status(500).json({ error: 'Error' });
     }
 });
@@ -225,15 +203,13 @@ app.get('/api/pedidos/detalle/:id', async (req, res) => {
 app.get('/api/reportes', async (req, res) => {
     try {
         const r = await pool.query(`
-            SELECT 
-                DATE(fecha) AS fecha,
-                COUNT(*) AS pedidos,
-                SUM(total_peso) AS total
+            SELECT DATE(fecha) AS fecha,
+                   COUNT(*) AS pedidos,
+                   SUM(total_peso) AS total
             FROM pedidos
             GROUP BY DATE(fecha)
             ORDER BY fecha DESC
         `);
-
         res.json(r.rows);
     } catch (err) {
         res.status(500).json([]);
@@ -255,6 +231,8 @@ app.listen(PORT, () => {
     console.log('🚀 PUERTO:', PORT);
     console.log('=================================');
 });
+
+
 
 
 
