@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-const pool = require('./db');
+const pool = require('./db'); // conexión a PostgreSQL / Supabase
 const nodemailer = require('nodemailer');
 
 const app = express();
@@ -9,12 +9,12 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Servir archivos estáticos desde la raíz
+// Servir archivos estáticos
 app.use(express.static(__dirname));
 
 let carritoTemporal = {};
 
-// ================= EMAIL =================
+// ================= CONFIGURACIÓN EMAIL =================
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -25,21 +25,10 @@ const transporter = nodemailer.createTransport({
 
 // ================= RUTAS HTML =================
 const htmlFiles = [
-    'Recicladora4R',
-    'login',
-    'Registro',
-    'restablecer',
-    'panel',
-    'panel_usuario',
-    'carrito',
-    'mis_pedidos',
-    'gestionar_pedidos',
-    'productos',
-    'usuarios',
-    'reportes',
-    'gestion_ventas',
-    'finalizar_pedido',
-    'ver_detalle'
+    'Recicladora4R', 'login', 'Registro', 'restablecer',
+    'panel', 'panel_usuario', 'carrito', 'mis_pedidos',
+    'gestionar_pedidos', 'productos', 'usuarios', 'reportes',
+    'gestion_ventas', 'finalizar_pedido', 'ver_detalle'
 ];
 
 htmlFiles.forEach(file => {
@@ -48,7 +37,7 @@ htmlFiles.forEach(file => {
     });
 });
 
-// ================= LOGIN =================
+// ================= API LOGIN =================
 app.post('/api/login', async (req, res) => {
     try {
         const { usuario, clave } = req.body;
@@ -76,23 +65,14 @@ app.post('/api/login', async (req, res) => {
 
     } catch (err) {
         console.error('❌ ERROR LOGIN:', err.message);
-        res.status(500).json({ success: false, message: 'Error de servidor' });
+        res.status(500).json({ success: false, message: 'Error del servidor' });
     }
 });
 
-// ================= REGISTRO =================
+// ================= API REGISTRO =================
 app.post('/api/registro', async (req, res) => {
     try {
-        const {
-            nombre,
-            correo,
-            usuario,
-            clave,
-            telefono,
-            provincia,
-            ciudad,
-            direccion
-        } = req.body;
+        const { nombre, correo, usuario, clave, telefono, provincia, ciudad, direccion } = req.body;
 
         const check = await pool.query(
             'SELECT id FROM usuarios WHERE usuario = $1 OR correo = $2',
@@ -116,34 +96,7 @@ app.post('/api/registro', async (req, res) => {
     }
 });
 
-// ================= LISTAR USUARIOS (ADMIN) =================
-app.get('/api/usuarios', async (req, res) => {
-    try {
-        const result = await pool.query(`
-            SELECT 
-                id,
-                nombre,
-                correo,
-                usuario,
-                rol,
-                telefono,
-                provincia,
-                ciudad,
-                direccion,
-                fecha_registro
-            FROM usuarios
-            ORDER BY id ASC
-        `);
-
-        res.json(result.rows);
-
-    } catch (err) {
-        console.error('❌ ERROR USUARIOS:', err.message);
-        res.status(500).json({ error: 'Error al obtener usuarios' });
-    }
-});
-
-// ================= PRODUCTOS =================
+// ================= PRODUCTOS Y CARRITO =================
 app.get('/api/productos-cliente', async (req, res) => {
     try {
         const result = await pool.query(
@@ -155,7 +108,6 @@ app.get('/api/productos-cliente', async (req, res) => {
     }
 });
 
-// ================= CARRITO =================
 app.post('/api/agregar-al-carrito', (req, res) => {
     const { id_producto, cantidad } = req.body;
     carritoTemporal[id_producto] = (carritoTemporal[id_producto] || 0) + Number(cantidad);
@@ -178,7 +130,11 @@ app.post('/api/finalizar-pedido', async (req, res) => {
 
         for (const id in carritoTemporal) {
             const cant = carritoTemporal[id];
-            const p = await pool.query('SELECT * FROM productos WHERE id = $1', [id]);
+
+            const p = await pool.query(
+                'SELECT * FROM productos WHERE id = $1',
+                [id]
+            );
 
             const sub = p.rows[0].peso_kg * cant;
             total += sub;
@@ -200,12 +156,62 @@ app.post('/api/finalizar-pedido', async (req, res) => {
         );
 
         await pool.query('COMMIT');
+
         carritoTemporal = {};
         res.json({ success: true });
 
     } catch (err) {
         await pool.query('ROLLBACK');
         res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// ================= ADMIN - USUARIOS =================
+
+// Listar usuarios
+app.get('/api/admin/usuarios', async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT id, nombre, usuario, rol
+            FROM usuarios
+            ORDER BY id ASC
+        `);
+        res.json(result.rows);
+    } catch (err) {
+        console.error('❌ ERROR LISTAR USUARIOS:', err.message);
+        res.status(500).json([]);
+    }
+});
+
+// Cambiar rol
+app.put('/api/admin/usuarios/rol', async (req, res) => {
+    const { id, rol } = req.body;
+
+    try {
+        await pool.query(
+            'UPDATE usuarios SET rol = $1 WHERE id = $2',
+            [rol, id]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        console.error('❌ ERROR CAMBIAR ROL:', err.message);
+        res.status(500).json({ success: false });
+    }
+});
+
+// Eliminar usuario
+app.delete('/api/admin/usuarios/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        await pool.query(
+            'DELETE FROM usuarios WHERE id = $1',
+            [id]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        console.error('❌ ERROR ELIMINAR USUARIO:', err.message);
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
