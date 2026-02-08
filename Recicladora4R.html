@@ -4,11 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recicladora 4R | Gestión Ambiental Profesional</title>
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3211/3211603.png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary-green: #2e7d32;
             --dark-green: #1b5e20;
+            --light-green: #e8f5e9;
             --accent-gold: #c5a059;
             --white: #ffffff;
             --text-main: #2c3e50;
@@ -17,12 +19,25 @@
         body {
             margin: 0;
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), 
-                        url('fondoA.jpg') no-repeat center center fixed;
-            background-size: cover;
+            background: #f9fbf9;
             color: var(--text-main);
             line-height: 1.8;
             scroll-behavior: smooth;
+        }
+
+        /* ===== ANIMACIONES ===== */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes rotateIcon {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .reveal {
+            animation: fadeInUp 0.8s ease-out forwards;
         }
 
         /* ===== TOP BAR ===== */
@@ -36,14 +51,14 @@
             letter-spacing: 1px;
         }
 
-        /* ===== HEADER CORPORATIVO ===== */
+        /* ===== HEADER UNIFICADO ===== */
         header {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 20px 10%;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 15px 10%;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
             position: sticky;
             top: 0;
             z-index: 1000;
@@ -56,27 +71,32 @@
         }
 
         .logo-container img {
-            height: 70px;
+            height: 65px;
+            /* El logo gira lentamente al cargar */
+            animation: rotateIcon 20s linear infinite;
         }
 
         .brand-text h1 {
             margin: 0;
-            font-size: 24px;
+            font-size: 22px;
             color: var(--dark-green);
-            letter-spacing: -0.5px;
+            font-weight: 800;
+            text-transform: uppercase;
         }
 
         .brand-text p {
             margin: 0;
-            font-size: 13px;
+            font-size: 11px;
             color: #7f8c8d;
             text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         /* ===== NAVEGACIÓN ===== */
         nav {
             display: flex;
-            gap: 30px;
+            gap: 25px;
+            align-items: center;
         }
 
         nav a {
@@ -84,80 +104,99 @@
             color: var(--text-main);
             font-weight: 600;
             font-size: 14px;
-            transition: color 0.3s;
-            position: relative;
+            transition: 0.3s;
         }
 
-        nav a::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 2px;
-            bottom: -5px;
-            left: 0;
-            background-color: var(--primary-green);
-            transition: width 0.3s;
-        }
-
-        nav a:hover::after {
-            width: 100%;
+        nav a:hover {
+            color: var(--primary-green);
         }
 
         .btn-portal {
             background: var(--primary-green);
             color: white !important;
-            padding: 8px 20px;
-            border-radius: 4px;
+            padding: 10px 22px;
+            border-radius: 50px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(46, 125, 50, 0.3);
         }
 
-        /* ===== CONTENIDO PRINCIPAL ===== */
+        .btn-portal:hover {
+            background: var(--dark-green);
+            transform: scale(1.05);
+        }
+
+        /* ===== SECCIONES ===== */
         .container {
             max-width: 1100px;
-            margin: 60px auto;
+            margin: 40px auto;
             padding: 0 20px;
         }
 
         section {
-            background: white;
-            padding: 50px;
-            border-radius: 2px;
-            margin-bottom: 40px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            border-top: 4px solid var(--primary-green);
+            background: var(--white);
+            padding: 60px;
+            border-radius: 15px;
+            margin-bottom: 50px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.03);
+            border-top: 5px solid var(--primary-green);
         }
 
         h2 {
-            font-size: 28px;
+            font-size: 32px;
             color: var(--dark-green);
-            margin-bottom: 30px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Añade icono de reciclaje antes de cada H2 */
+        h2::before {
+            content: '♻️';
+            font-size: 24px;
         }
 
         .info-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 40px;
+            gap: 50px;
             align-items: center;
         }
 
-        /* Estilo para el contenedor del mapa */
         .map-frame {
-            border: 1px solid #eee;
-            padding: 10px;
-            background: #fafafa;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 5px solid white;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        /* ===== COMUNICADOS ===== */
+        .news-card {
+            border-left: 4px solid var(--primary-green);
+            padding: 20px;
+            background: var(--light-green);
+            margin-bottom: 15px;
+            border-radius: 0 10px 10px 0;
+            transition: 0.3s;
+        }
+
+        .news-card:hover {
+            transform: translateX(10px);
+            background: #dcedc8;
         }
 
         /* ===== FOOTER ===== */
         footer {
-            background: #1a1a1a;
-            color: #bdc3c7;
+            background: #121212;
+            color: #ecf0f1;
             padding: 60px 10% 30px;
             text-align: center;
         }
 
         @media (max-width: 768px) {
             .info-grid { grid-template-columns: 1fr; }
-            header { flex-direction: column; gap: 20px; }
+            header { flex-direction: column; text-align: center; }
+            nav { margin-top: 20px; flex-wrap: wrap; justify-content: center; }
         }
     </style>
 </head>
@@ -165,7 +204,7 @@
 
 <div class="top-bar">
     <span>📍 Riobamba, Ecuador</span>
-    <span>📞 Contacto: (03) 2XXX-XXX | info@recicladora4r.com</span>
+    <span>📞 (03) 2XXX-XXX | info@recicladora4r.com</span>
 </div>
 
 <header>
@@ -180,43 +219,45 @@
         <a href="#quienes">Institución</a>
         <a href="#noticias">Comunicados</a>
         <a href="#ubicacion">Ubicación</a>
-        <a href="login.html" class="btn-portal">Iniciar Sesión</a>
+        <a href="login.html" class="btn-portal">Acceso Personal</a>
     </nav>
 </header>
 
 <main class="container">
 
-    <section id="quienes">
+    <section id="quienes" class="reveal">
         <div class="info-grid">
             <div>
                 <h2>Misión Institucional</h2>
-                <p>En <span style="color:var(--primary-green); font-weight:700;">Recicladora 4R</span>, nuestra labor se fundamenta en la excelencia operativa aplicada a la gestión de residuos sólidos. Nos comprometemos con el desarrollo sostenible de la región.</p>
+                <p>Nuestra labor se fundamenta en la excelencia operativa aplicada a la gestión de residuos sólidos. Nos comprometemos con el desarrollo sostenible de la región de Chimborazo mediante procesos certificados de recolección y reciclaje.</p>
             </div>
             <div>
                 <h2>Visión Estratégica</h2>
-                <p>Consolidarnos para el año 2030 como la entidad referente en economía circular del país, promoviendo una cultura de responsabilidad ambiental compartida.</p>
+                <p>Consolidarnos para el año 2030 como la entidad referente en economía circular del Ecuador, promoviendo una cultura de responsabilidad ambiental compartida entre ciudadanos y empresas.</p>
             </div>
         </div>
     </section>
 
-    <section id="noticias">
+    <section id="noticias" class="reveal">
         <h2>Comunicados Oficiales</h2>
-        <div style="border-left: 2px solid #eee; padding-left: 20px;">
-            <p><strong>02 FEB 2026:</strong> Se informa la apertura del nuevo centro de acopio tecnológico.</p>
-            <p><strong>25 ENE 2026:</strong> Recicladora 4R recibe certificación de cumplimiento ambiental.</p>
+        <div class="news-card">
+            <p><strong>02 FEB 2026:</strong> Inauguración de nuestra nueva planta de procesamiento de plásticos de alta densidad.</p>
+        </div>
+        <div class="news-card">
+            <p><strong>25 ENE 2026:</strong> Apertura de canales digitales para la recepción de propuestas de venta de materiales.</p>
         </div>
     </section>
 
-    <section id="ubicacion">
+    <section id="ubicacion" class="reveal">
         <div class="info-grid">
             <div>
                 <h2>Ubicación Estratégica</h2>
-                <p>Nuestras instalaciones están equipadas para el procesamiento masivo de materiales reciclables. Puede visitarnos en nuestras oficinas centrales para gestionar convenios corporativos o entregas particulares.</p>
-                <p><strong>Dirección:</strong> Riobamba, Chimborazo - Ecuador.</p>
-                <p><strong>Horarios:</strong> Lunes a Viernes (08:00 - 17:00)</p>
+                <p>Visítenos en nuestras instalaciones centrales para gestionar convenios corporativos o entregas de gran volumen.</p>
+                <p><strong>Dirección:</strong> Panamericana Norte, Riobamba - Ecuador.</p>
+                <p><strong>Horario:</strong> Lunes a Viernes (08:00 - 17:00)</p>
             </div>
             <div class="map-frame">
-                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d5482.810373548087!2d-78.63731202106113!3d-1.6851796033121582!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91d3a9c17e3eddc3%3A0x5aa447ee72ed9df2!2sRecicladora%204R!5e0!3m2!1ses!2sec!4v1770085959794!5m2!1ses!2sec" width="100%" height="350" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31899.88874136458!2d-78.6653!3d-1.6709!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91d3080646766699%3A0x63339f40078021!2sRiobamba!5e0!3m2!1ses!2sec!4v1700000000000!5m2!1ses!2sec" width="100%" height="350" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
             </div>
         </div>
     </section>
@@ -225,10 +266,10 @@
 
 <footer>
     <div style="border-bottom: 1px solid #333; padding-bottom: 30px; margin-bottom: 30px;">
-        <p><strong>Recicladora 4R S.A.</strong></p>
-        <p>Expertos en remediación y logística ambiental.</p>
+        <p style="font-size: 20px; color: white;"><strong>Recicladora 4R S.A.</strong></p>
+        <p>Líderes en logística ambiental y remediación.</p>
     </div>
-    <p style="font-size: 12px;">© 2026 Todos los derechos reservados. Política de Privacidad.</p>
+    <p style="font-size: 12px; color: #777;">© 2026 Recicladora 4R | Desarrollado para un futuro sostenible.</p>
 </footer>
 
 </body>
