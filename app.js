@@ -81,6 +81,41 @@ app.post('/api/registro', async (req, res) => {
 });
 
 // ================= PRODUCTOS =================
+
+// NUEVO: Obtener todos los productos para la tabla del administrador
+app.get('/api/productos', async (req, res) => {
+    try {
+        const r = await pool.query('SELECT * FROM productos ORDER BY id ASC');
+        res.json(r.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// NUEVO: Agregar material desde el panel
+app.post('/api/productos', async (req, res) => {
+    const { nombre, categoria, stock, peso_kg } = req.body;
+    try {
+        await pool.query(
+            'INSERT INTO productos (nombre, categoria, stock, peso_kg) VALUES ($1, $2, $3, $4)',
+            [nombre, categoria, stock, peso_kg]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// NUEVO: Eliminar material de la tabla
+app.delete('/api/productos/:id', async (req, res) => {
+    try {
+        await pool.query('DELETE FROM productos WHERE id = $1', [req.params.id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 app.get('/api/productos-cliente', async (req, res) => {
     const r = await pool.query(
         'SELECT id,nombre,peso_kg,stock FROM productos WHERE stock>0'
@@ -212,5 +247,4 @@ app.listen(PORT, () => {
     console.log(`🚀 PUERTO: ${PORT}`);
     console.log('=================================');
 });
-
 
