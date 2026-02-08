@@ -14,8 +14,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(session({
     secret: 'recicladora4r_secret',
     resave: false,
-    saveUninitialized: false,
-    cookie: { secure: false }
+    saveUninitialized: false
 }));
 
 // ================= BD =================
@@ -25,10 +24,16 @@ const pool = new Pool({
 });
 
 // ================= ARCHIVOS ESTÁTICOS =================
-// Sirve HTML, CSS, JS, imágenes desde la raíz del proyecto
+// TODOS los HTML, CSS, JS están en la raíz
 app.use(express.static(__dirname));
 
-// ================= LOGIN (API JSON) =================
+// ================= RUTA PRINCIPAL =================
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'Recicladora4R.html'));
+});
+
+// ================= LOGIN (API) =================
+// COINCIDE con fetch('/api/login')
 app.post('/api/login', async (req, res) => {
     const { usuario, clave } = req.body;
 
@@ -44,8 +49,8 @@ app.post('/api/login', async (req, res) => {
 
         const user = r.rows[0];
 
-        const valido = await bcrypt.compare(clave, user.clave);
-        if (!valido) {
+        // ⚠️ contraseña en texto plano (como tienes en la BD)
+        if (clave !== user.clave) {
             return res.json({ success: false, message: 'Contraseña incorrecta' });
         }
 
@@ -58,17 +63,12 @@ app.post('/api/login', async (req, res) => {
         res.json({
             success: true,
             userId: user.id,
-            redirect: user.rol === 'admin'
-                ? '/panel.html'
-                : '/usuario.html'
+            redirect: user.rol === 'admin' ? '/panel.html' : '/usuario.html'
         });
 
     } catch (err) {
         console.error('❌ LOGIN:', err.message);
-        res.status(500).json({
-            success: false,
-            message: 'Error del servidor'
-        });
+        res.json({ success: false, message: 'Error del servidor' });
     }
 });
 
@@ -80,12 +80,12 @@ app.get('/api/session', (req, res) => {
     res.json({ logged: true, usuario: req.session.usuario });
 });
 
-// ================= USUARIOS =================
+// ================= USUARIOS (ADMIN) =================
 app.get('/api/usuarios', async (req, res) => {
     try {
         const r = await pool.query('SELECT * FROM usuarios ORDER BY id');
         res.json(r.rows);
-    } catch (err) {
+    } catch {
         res.status(500).json([]);
     }
 });
@@ -95,7 +95,7 @@ app.get('/api/productos', async (req, res) => {
     try {
         const r = await pool.query('SELECT * FROM productos ORDER BY id');
         res.json(r.rows);
-    } catch (err) {
+    } catch {
         res.status(500).json([]);
     }
 });
@@ -163,7 +163,7 @@ app.get('/api/usuario/mis-pedidos/:id', async (req, res) => {
             ORDER BY fecha DESC
         `, [req.params.id]);
         res.json(r.rows);
-    } catch (err) {
+    } catch {
         res.status(500).json([]);
     }
 });
@@ -172,9 +172,16 @@ app.get('/api/usuario/mis-pedidos/:id', async (req, res) => {
 app.get('/api/pedidos/detalle/:id', async (req, res) => {
     try {
         const pedido = await pool.query(`
-            SELECT p.id, p.fecha, p.total_peso,
-                   u.nombre, u.correo, u.telefono,
-                   u.ciudad, u.provincia, u.direccion
+            SELECT 
+                p.id,
+                p.fecha,
+                p.total_peso,
+                u.nombre,
+                u.correo,
+                u.telefono,
+                u.ciudad,
+                u.provincia,
+                u.direccion
             FROM pedidos p
             JOIN usuarios u ON u.id = p.id_usuario
             WHERE p.id = $1
@@ -185,8 +192,7 @@ app.get('/api/pedidos/detalle/:id', async (req, res) => {
         }
 
         const detalles = await pool.query(`
-            SELECT pr.nombre AS material,
-                   d.cantidad, d.peso_subtotal
+            SELECT pr.nombre AS material, d.cantidad, d.peso_subtotal
             FROM detalle_pedidos d
             JOIN productos pr ON pr.id = d.id_producto
             WHERE d.id_pedido = $1
@@ -195,6 +201,7 @@ app.get('/api/pedidos/detalle/:id', async (req, res) => {
         res.json({ pedido: pedido.rows[0], detalles: detalles.rows });
 
     } catch (err) {
+        console.error('❌ DETALLE PEDIDO:', err.message);
         res.status(500).json({ error: 'Error' });
     }
 });
@@ -211,16 +218,14 @@ app.get('/api/reportes', async (req, res) => {
             ORDER BY fecha DESC
         `);
         res.json(r.rows);
-    } catch (err) {
+    } catch {
         res.status(500).json([]);
     }
 });
 
 // ================= LOGOUT =================
 app.get('/logout', (req, res) => {
-    req.session.destroy(() => {
-        res.redirect('/login.html');
-    });
+    req.session.destroy(() => res.redirect('/login.html'));
 });
 
 // ================= SERVER =================
@@ -231,8 +236,3 @@ app.listen(PORT, () => {
     console.log('🚀 PUERTO:', PORT);
     console.log('=================================');
 });
-
-
-
-
-
