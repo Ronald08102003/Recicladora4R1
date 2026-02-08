@@ -24,7 +24,13 @@ const pool = new Pool({
 });
 
 // ================= ARCHIVOS ESTÁTICOS =================
-app.use(express.static(path.join(__dirname, 'public')));
+// Servimos los archivos HTML que ya tienes en la raíz
+app.use(express.static(__dirname));
+
+// ================= RUTA INICIO =================
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'Recicladora4R.html'));
+});
 
 // ================= LOGIN =================
 app.post('/login', async (req, res) => {
@@ -249,5 +255,6 @@ app.listen(PORT, () => {
     console.log('🚀 PUERTO:', PORT);
     console.log('=================================');
 });
+
 
 
