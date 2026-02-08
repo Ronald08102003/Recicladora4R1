@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-const pool = require('./db'); // conexión a PostgreSQL / Supabase
+const pool = require('./db'); // PostgreSQL / Supabase
 const nodemailer = require('nodemailer');
 
 const app = express();
@@ -8,8 +8,6 @@ const app = express();
 // ================= CONFIGURACIÓN =================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Servir archivos estáticos
 app.use(express.static(__dirname));
 
 let carritoTemporal = {};
@@ -37,56 +35,37 @@ htmlFiles.forEach(file => {
     });
 });
 
-// ================= RUTA EXTRA PARA BOTÓN INICIO =================
-app.get('/panel_admin', (req, res) => {
-    res.redirect('/panel');
-});
+// ================= RUTA BOTÓN INICIO =================
+app.get('/panel_admin', (req, res) => res.redirect('/panel'));
 
-// ================= API LOGIN =================
+// ================= LOGIN =================
 app.post('/api/login', async (req, res) => {
     try {
         const { usuario, clave } = req.body;
-
         const result = await pool.query(
             'SELECT id, nombre, usuario, clave, rol FROM usuarios WHERE usuario = $1',
             [usuario]
         );
 
-        if (result.rows.length === 0) {
-            return res.json({ success: false, message: 'Usuario no encontrado' });
-        }
+        if (!result.rows.length) return res.json({ success: false });
 
         const user = result.rows[0];
-
-        if (clave.trim() !== user.clave.trim()) {
-            return res.json({ success: false, message: 'Clave incorrecta' });
-        }
+        if (clave.trim() !== user.clave.trim()) return res.json({ success: false });
 
         res.json({
             success: true,
             userId: user.id,
             redirect: user.rol === 'admin' ? '/panel' : '/panel_usuario'
         });
-
     } catch (err) {
-        console.error('❌ ERROR LOGIN:', err.message);
         res.status(500).json({ success: false });
     }
 });
 
-// ================= API REGISTRO =================
+// ================= REGISTRO =================
 app.post('/api/registro', async (req, res) => {
     try {
         const { nombre, correo, usuario, clave, telefono, provincia, ciudad, direccion } = req.body;
-
-        const check = await pool.query(
-            'SELECT id FROM usuarios WHERE usuario = $1 OR correo = $2',
-            [usuario, correo]
-        );
-
-        if (check.rows.length > 0) {
-            return res.json({ success: false });
-        }
 
         await pool.query(`
             INSERT INTO usuarios
@@ -95,7 +74,6 @@ app.post('/api/registro', async (req, res) => {
         `, [nombre, correo, usuario, clave, telefono, provincia, ciudad, direccion]);
 
         res.json({ success: true });
-
     } catch (err) {
         res.status(500).json({ success: false });
     }
@@ -103,28 +81,10 @@ app.post('/api/registro', async (req, res) => {
 
 // ================= PRODUCTOS CLIENTE =================
 app.get('/api/productos-cliente', async (req, res) => {
-    try {
-        const result = await pool.query(
-            'SELECT id, nombre, peso_kg, stock FROM productos WHERE stock > 0'
-        );
-        res.json(result.rows);
-    } catch {
-        res.status(500).json([]);
-    }
-});
-
-// ================= PRODUCTOS ADMIN (INVENTARIO) =================
-app.get('/api/admin/productos', async (req, res) => {
-    try {
-        const result = await pool.query(`
-            SELECT id, nombre, peso_kg, stock
-            FROM productos
-            ORDER BY id ASC
-        `);
-        res.json(result.rows);
-    } catch {
-        res.status(500).json([]);
-    }
+    const result = await pool.query(
+        'SELECT id, nombre, peso_kg, stock FROM productos WHERE stock > 0'
+    );
+    res.json(result.rows);
 });
 
 // ================= CARRITO =================
@@ -136,68 +96,52 @@ app.post('/api/agregar-al-carrito', (req, res) => {
 
 // ================= FINALIZAR PEDIDO =================
 app.post('/api/finalizar-pedido', async (req, res) => {
-    const { id_usuario } = req.body;
-
     try {
+        const { id_usuario } = req.body;
         await pool.query('BEGIN');
 
         const pedido = await pool.query(
-            'INSERT INTO pedidos (id_usuario, fecha, total_peso, estado) VALUES ($1,NOW(),0,$2) RETURNING id',
-            [id_usuario, 'Pendiente']
+            `INSERT INTO pedidos (id_usuario, fecha, total_peso, estado)
+             VALUES ($1,NOW(),0,'Pendiente') RETURNING id`,
+            [id_usuario]
         );
 
-        const idPedido = pedido.rows[0].id;
         let total = 0;
-
         for (const id in carritoTemporal) {
             const cant = carritoTemporal[id];
             const p = await pool.query('SELECT peso_kg FROM productos WHERE id=$1', [id]);
-
             const sub = p.rows[0].peso_kg * cant;
             total += sub;
 
             await pool.query(
-                'INSERT INTO detalle_pedidos (id_pedido,id_producto,cantidad,peso_subtotal) VALUES ($1,$2,$3,$4)',
-                [idPedido, id, cant, sub]
+                'INSERT INTO detalle_pedidos VALUES ($1,$2,$3,$4)',
+                [pedido.rows[0].id, id, cant, sub]
             );
 
             await pool.query(
-                'UPDATE productos SET stock = stock - $1 WHERE id = $2',
+                'UPDATE productos SET stock = stock - $1 WHERE id=$2',
                 [cant, id]
             );
         }
 
-        await pool.query(
-            'UPDATE pedidos SET total_peso=$1 WHERE id=$2',
-            [total, idPedido]
-        );
-
+        await pool.query('UPDATE pedidos SET total_peso=$1 WHERE id=$2', [total, pedido.rows[0].id]);
         await pool.query('COMMIT');
         carritoTemporal = {};
-
         res.json({ success: true });
-
-    } catch (err) {
+    } catch {
         await pool.query('ROLLBACK');
         res.status(500).json({ success: false });
     }
 });
 
-// ================= ADMIN - USUARIOS =================
+// ================= ADMIN USUARIOS =================
 app.get('/api/admin/usuarios', async (req, res) => {
-    try {
-        const result = await pool.query(
-            'SELECT id,nombre,usuario,rol FROM usuarios ORDER BY id'
-        );
-        res.json(result.rows);
-    } catch {
-        res.status(500).json([]);
-    }
+    const r = await pool.query('SELECT id,nombre,usuario,rol FROM usuarios ORDER BY id');
+    res.json(r.rows);
 });
 
 app.put('/api/admin/usuarios/rol', async (req, res) => {
-    const { id, rol } = req.body;
-    await pool.query('UPDATE usuarios SET rol=$1 WHERE id=$2', [rol, id]);
+    await pool.query('UPDATE usuarios SET rol=$1 WHERE id=$2', [req.body.rol, req.body.id]);
     res.json({ success: true });
 });
 
@@ -206,28 +150,79 @@ app.delete('/api/admin/usuarios/:id', async (req, res) => {
     res.json({ success: true });
 });
 
-// ================= ADMIN - PEDIDOS =================
-app.get('/api/admin/pedidos', async (req, res) => {
-    const result = await pool.query(`
-        SELECT p.id, u.nombre, p.fecha, p.total_peso, p.estado
-        FROM pedidos p
-        JOIN usuarios u ON u.id = p.id_usuario
-        ORDER BY p.fecha DESC
-    `);
-    res.json(result.rows);
+// ================= ADMIN INVENTARIO =================
+app.get('/api/admin/productos', async (req, res) => {
+    const r = await pool.query('SELECT * FROM productos ORDER BY id');
+    res.json(r.rows);
 });
 
-// ================= REPORTES (GRÁFICAS) =================
-app.get('/api/reportes/resumen', async (req, res) => {
-    const pedidos = await pool.query('SELECT COUNT(*) FROM pedidos');
-    const peso = await pool.query('SELECT COALESCE(SUM(total_peso),0) FROM pedidos');
-    const usuarios = await pool.query('SELECT COUNT(*) FROM usuarios');
+// ================= ADMIN PEDIDOS =================
+app.get('/api/admin/pedidos', async (req, res) => {
+    const r = await pool.query(`
+        SELECT p.id, u.nombre AS cliente, p.total_peso, p.estado
+        FROM pedidos p
+        JOIN usuarios u ON u.id = p.id_usuario
+        ORDER BY p.id DESC
+    `);
+    res.json(r.rows);
+});
+
+app.put('/api/admin/pedidos/estado', async (req, res) => {
+    await pool.query(
+        'UPDATE pedidos SET estado=$1 WHERE id=$2',
+        [req.body.estado, req.body.id]
+    );
+    res.json({ success: true });
+});
+
+// ================= REPORTES =================
+app.get('/api/admin/reportes-detallados', async (req, res) => {
+    const productos = await pool.query('SELECT nombre, stock, peso_kg FROM productos');
+    const resumen = await pool.query(`
+        SELECT
+            (SELECT COUNT(*) FROM productos) totalProductos,
+            (SELECT COUNT(*) FROM pedidos WHERE estado='Completado') totalVentas,
+            (SELECT COALESCE(SUM(total_peso),0) FROM pedidos WHERE estado='Completado') totalPeso
+    `);
 
     res.json({
-        total_pedidos: pedidos.rows[0].count,
-        total_peso: peso.rows[0].sum,
-        total_usuarios: usuarios.rows[0].count
+        resumen: resumen.rows[0],
+        listaProductos: productos.rows,
+        grafica: {
+            nombres: productos.rows.map(p => p.nombre),
+            stocks: productos.rows.map(p => p.stock)
+        }
     });
+});
+
+// ================= GESTIÓN DE VENTAS =================
+app.get('/api/admin/propuestas-venta', async (req, res) => {
+    const r = await pool.query(`
+        SELECT pv.*, u.nombre AS cliente, u.telefono, u.ciudad, u.provincia, u.direccion
+        FROM propuestas_venta pv
+        LEFT JOIN usuarios u ON u.id = pv.id_usuario
+        ORDER BY pv.fecha DESC
+    `);
+    res.json(r.rows);
+});
+
+app.put('/api/admin/propuestas-venta/estado', async (req, res) => {
+    await pool.query(
+        'UPDATE propuestas_venta SET estado=$1 WHERE id=$2',
+        [req.body.estado, req.body.id]
+    );
+    res.json({ success: true });
+});
+
+app.get('/api/admin/propuesta-detalle/:id', async (req, res) => {
+    const r = await pool.query(`
+        SELECT pv.*, u.nombre AS cliente, u.correo, u.telefono
+        FROM propuestas_venta pv
+        LEFT JOIN usuarios u ON u.id = pv.id_usuario
+        WHERE pv.id=$1
+    `, [req.params.id]);
+
+    res.json(r.rows[0]);
 });
 
 // ================= LOGOUT =================
@@ -241,3 +236,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`✅ RECICLADORA 4R ACTIVA EN PUERTO ${PORT}`);
 });
+
