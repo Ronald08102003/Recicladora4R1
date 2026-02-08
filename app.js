@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-const pool = require('./db'); // conexión a PostgreSQL / Supabase
+const pool = require('./db'); // Supabase PostgreSQL
 const nodemailer = require('nodemailer');
 
 const app = express();
@@ -8,13 +8,11 @@ const app = express();
 // ================= CONFIGURACIÓN =================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Servir archivos estáticos
 app.use(express.static(__dirname));
 
 let carritoTemporal = {};
 
-// ================= CONFIGURACIÓN EMAIL =================
+// ================= EMAIL =================
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -25,10 +23,10 @@ const transporter = nodemailer.createTransport({
 
 // ================= RUTAS HTML =================
 const htmlFiles = [
-    'Recicladora4R', 'login', 'Registro', 'restablecer',
-    'panel', 'panel_usuario', 'carrito', 'mis_pedidos',
-    'gestionar_pedidos', 'productos', 'usuarios', 'reportes',
-    'gestion_ventas', 'finalizar_pedido', 'ver_detalle'
+    'Recicladora4R','login','Registro','restablecer',
+    'panel','panel_usuario','carrito','mis_pedidos',
+    'gestionar_pedidos','productos','usuarios',
+    'reportes','gestion_ventas','finalizar_pedido','ver_detalle'
 ];
 
 htmlFiles.forEach(file => {
@@ -37,183 +35,167 @@ htmlFiles.forEach(file => {
     });
 });
 
-// ================= RUTA EXTRA PARA BOTÓN INICIO (NO SE BORRA NADA) =================
-app.get('/panel_admin', (req, res) => {
-    res.redirect('/panel');
-});
+app.get('/panel_admin', (req, res) => res.redirect('/panel'));
 
-// ================= API LOGIN =================
+// ================= LOGIN =================
 app.post('/api/login', async (req, res) => {
-    try {
-        const { usuario, clave } = req.body;
+    const { usuario, clave } = req.body;
 
-        const result = await pool.query(
-            'SELECT id, nombre, usuario, clave, rol FROM usuarios WHERE usuario = $1',
-            [usuario]
-        );
+    const r = await pool.query(
+        'SELECT id,nombre,usuario,clave,rol FROM usuarios WHERE usuario=$1',
+        [usuario]
+    );
 
-        if (result.rows.length === 0) {
-            return res.json({ success: false, message: 'Usuario no encontrado' });
-        }
+    if (r.rows.length === 0)
+        return res.json({ success:false,message:'Usuario no encontrado' });
 
-        const user = result.rows[0];
+    if (r.rows[0].clave.trim() !== clave.trim())
+        return res.json({ success:false,message:'Clave incorrecta' });
 
-        if (clave.trim() !== user.clave.trim()) {
-            return res.json({ success: false, message: 'Clave incorrecta' });
-        }
-
-        res.json({
-            success: true,
-            userId: user.id,
-            redirect: user.rol === 'admin' ? '/panel' : '/panel_usuario'
-        });
-
-    } catch (err) {
-        console.error('❌ ERROR LOGIN:', err.message);
-        res.status(500).json({ success: false, message: 'Error del servidor' });
-    }
+    res.json({
+        success:true,
+        userId:r.rows[0].id,
+        redirect: r.rows[0].rol === 'admin' ? '/panel' : '/panel_usuario'
+    });
 });
 
-// ================= API REGISTRO =================
+// ================= REGISTRO =================
 app.post('/api/registro', async (req, res) => {
-    try {
-        const { nombre, correo, usuario, clave, telefono, provincia, ciudad, direccion } = req.body;
+    const { nombre,correo,usuario,clave,telefono,provincia,ciudad,direccion } = req.body;
 
-        const check = await pool.query(
-            'SELECT id FROM usuarios WHERE usuario = $1 OR correo = $2',
-            [usuario, correo]
-        );
+    const check = await pool.query(
+        'SELECT id FROM usuarios WHERE usuario=$1 OR correo=$2',
+        [usuario,correo]
+    );
 
-        if (check.rows.length > 0) {
-            return res.json({ success: false, message: 'Usuario o correo ya existe' });
-        }
+    if (check.rows.length > 0)
+        return res.json({ success:false });
 
-        await pool.query(`
-            INSERT INTO usuarios
-            (nombre, correo, usuario, clave, rol, telefono, provincia, ciudad, direccion)
-            VALUES ($1,$2,$3,$4,'cliente',$5,$6,$7,$8)
-        `, [nombre, correo, usuario, clave, telefono, provincia, ciudad, direccion]);
+    await pool.query(`
+        INSERT INTO usuarios
+        (nombre,correo,usuario,clave,rol,telefono,provincia,ciudad,direccion)
+        VALUES ($1,$2,$3,$4,'cliente',$5,$6,$7,$8)
+    `,[nombre,correo,usuario,clave,telefono,provincia,ciudad,direccion]);
 
-        res.json({ success: true });
-
-    } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
-    }
+    res.json({ success:true });
 });
 
-// ================= PRODUCTOS Y CARRITO =================
+// ================= PRODUCTOS =================
 app.get('/api/productos-cliente', async (req, res) => {
-    try {
-        const result = await pool.query(
-            'SELECT id, nombre, peso_kg, stock FROM productos WHERE stock > 0'
-        );
-        res.json(result.rows);
-    } catch (err) {
-        res.status(500).send(err.message);
-    }
+    const r = await pool.query(
+        'SELECT id,nombre,peso_kg,stock FROM productos WHERE stock>0'
+    );
+    res.json(r.rows);
 });
 
+// ================= OFERTAS =================
+app.get('/api/ofertas', async (req, res) => {
+    const r = await pool.query(`
+        SELECT id,nombre,peso_kg,descuento
+        FROM productos
+        WHERE oferta=true AND stock>0
+    `);
+    res.json(r.rows);
+});
+
+// ================= CARRITO =================
 app.post('/api/agregar-al-carrito', (req, res) => {
     const { id_producto, cantidad } = req.body;
-    carritoTemporal[id_producto] = (carritoTemporal[id_producto] || 0) + Number(cantidad);
-    res.json({ success: true });
+    carritoTemporal[id_producto] =
+        (carritoTemporal[id_producto] || 0) + Number(cantidad);
+    res.json({ success:true });
 });
 
+// ================= FINALIZAR PEDIDO =================
 app.post('/api/finalizar-pedido', async (req, res) => {
     const { id_usuario } = req.body;
 
     try {
         await pool.query('BEGIN');
 
-        const pedido = await pool.query(
-            'INSERT INTO pedidos (id_usuario, fecha, total_peso, estado) VALUES ($1,NOW(),0,$2) RETURNING id',
-            [id_usuario, 'Pendiente']
-        );
+        const pedido = await pool.query(`
+            INSERT INTO pedidos (id_usuario,fecha,total_peso,estado)
+            VALUES ($1,NOW(),0,'Pendiente') RETURNING id
+        `,[id_usuario]);
 
-        const idPedido = pedido.rows[0].id;
         let total = 0;
 
         for (const id in carritoTemporal) {
             const cant = carritoTemporal[id];
 
             const p = await pool.query(
-                'SELECT * FROM productos WHERE id = $1',
-                [id]
+                'SELECT peso_kg FROM productos WHERE id=$1',[id]
             );
 
             const sub = p.rows[0].peso_kg * cant;
             total += sub;
 
-            await pool.query(
-                'INSERT INTO detalle_pedidos (id_pedido, id_producto, cantidad, peso_subtotal) VALUES ($1,$2,$3,$4)',
-                [idPedido, id, cant, sub]
-            );
+            await pool.query(`
+                INSERT INTO detalle_pedidos
+                (id_pedido,id_producto,cantidad,peso_subtotal)
+                VALUES ($1,$2,$3,$4)
+            `,[pedido.rows[0].id,id,cant,sub]);
 
             await pool.query(
-                'UPDATE productos SET stock = stock - $1 WHERE id = $2',
-                [cant, id]
+                'UPDATE productos SET stock=stock-$1 WHERE id=$2',
+                [cant,id]
             );
         }
 
         await pool.query(
-            'UPDATE pedidos SET total_peso = $1 WHERE id = $2',
-            [total, idPedido]
+            'UPDATE pedidos SET total_peso=$1 WHERE id=$2',
+            [total,pedido.rows[0].id]
         );
 
         await pool.query('COMMIT');
-
         carritoTemporal = {};
-        res.json({ success: true });
+        res.json({ success:true });
 
     } catch (err) {
         await pool.query('ROLLBACK');
-        res.status(500).json({ success: false, message: err.message });
+        res.json({ success:false,message:err.message });
     }
 });
 
-// ================= ADMIN - USUARIOS =================
+// ================= MIS PEDIDOS =================
+app.get('/api/mis-pedidos/:id', async (req, res) => {
+    const r = await pool.query(`
+        SELECT id,fecha,total_peso,estado
+        FROM pedidos
+        WHERE id_usuario=$1
+        ORDER BY fecha DESC
+    `,[req.params.id]);
+    res.json(r.rows);
+});
+
+// ================= ADMIN USUARIOS =================
 app.get('/api/admin/usuarios', async (req, res) => {
-    try {
-        const result = await pool.query(`
-            SELECT id, nombre, usuario, rol
-            FROM usuarios
-            ORDER BY id ASC
-        `);
-        res.json(result.rows);
-    } catch (err) {
-        console.error('❌ ERROR LISTAR USUARIOS:', err.message);
-        res.status(500).json([]);
-    }
+    const r = await pool.query(`
+        SELECT id,nombre,usuario,rol FROM usuarios ORDER BY id
+    `);
+    res.json(r.rows);
 });
 
 app.put('/api/admin/usuarios/rol', async (req, res) => {
     const { id, rol } = req.body;
-
-    try {
-        await pool.query(
-            'UPDATE usuarios SET rol = $1 WHERE id = $2',
-            [rol, id]
-        );
-        res.json({ success: true });
-    } catch (err) {
-        console.error('❌ ERROR CAMBIAR ROL:', err.message);
-        res.status(500).json({ success: false });
-    }
+    await pool.query('UPDATE usuarios SET rol=$1 WHERE id=$2',[rol,id]);
+    res.json({ success:true });
 });
 
 app.delete('/api/admin/usuarios/:id', async (req, res) => {
-    const { id } = req.params;
+    await pool.query('DELETE FROM usuarios WHERE id=$1',[req.params.id]);
+    res.json({ success:true });
+});
 
-    try {
-        await pool.query(
-            'DELETE FROM usuarios WHERE id = $1',
-            [id]
-        );
-        res.json({ success: true });
-    } catch (err) {
-        console.error('❌ ERROR ELIMINAR USUARIO:', err.message);
-        res.status(500).json({ success: false });
-    }
+// ================= REPORTES =================
+app.get('/api/admin/reportes', async (req, res) => {
+    const pedidos = await pool.query('SELECT COUNT(*) FROM pedidos');
+    const peso = await pool.query('SELECT SUM(total_peso) FROM pedidos');
+
+    res.json({
+        total_pedidos: pedidos.rows[0].count,
+        peso_total: peso.rows[0].sum || 0
+    });
 });
 
 // ================= LOGOUT =================
@@ -222,8 +204,13 @@ app.get('/logout', (req, res) => {
     res.redirect('/login');
 });
 
-// ================= PUERTO =================
+// ================= SERVIDOR =================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`✅ RECICLADORA 4R ACTIVA EN PUERTO ${PORT}`);
+    console.log('=================================');
+    console.log('✅ RECICLADORA 4R ACTIVA');
+    console.log(`🚀 PUERTO: ${PORT}`);
+    console.log('=================================');
 });
+
+
