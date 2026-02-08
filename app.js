@@ -1,238 +1,229 @@
-require('dotenv').config();
 const express = require('express');
 const path = require('path');
-const session = require('express-session');
-const bcrypt = require('bcryptjs');
-const { Pool } = require('pg');
+const pool = require('./db'); // conexión a PostgreSQL / Supabase
+const nodemailer = require('nodemailer');
 
 const app = express();
 
-// ================= CONFIG =================
+// ================= CONFIGURACIÓN =================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(session({
-    secret: 'recicladora4r_secret',
-    resave: false,
-    saveUninitialized: false
-}));
-
-// ================= BD =================
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
-});
-
-// ================= ARCHIVOS ESTÁTICOS =================
-// TODOS los HTML, CSS, JS están en la raíz
+// Servir archivos estáticos
 app.use(express.static(__dirname));
 
-// ================= RUTA PRINCIPAL =================
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'Recicladora4R.html'));
+let carritoTemporal = {};
+
+// ================= CONFIGURACIÓN EMAIL =================
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
 });
 
-// ================= LOGIN (API) =================
-// COINCIDE con fetch('/api/login')
-app.post('/api/login', async (req, res) => {
-    const { usuario, clave } = req.body;
+// ================= RUTAS HTML =================
+const htmlFiles = [
+    'Recicladora4R', 'login', 'Registro', 'restablecer',
+    'panel', 'panel_usuario', 'carrito', 'mis_pedidos',
+    'gestionar_pedidos', 'productos', 'usuarios', 'reportes',
+    'gestion_ventas', 'finalizar_pedido', 'ver_detalle'
+];
 
+htmlFiles.forEach(file => {
+    app.get(`/${file === 'Recicladora4R' ? '' : file.toLowerCase()}`, (req, res) => {
+        res.sendFile(path.join(__dirname, `${file}.html`));
+    });
+});
+
+// ================= RUTA EXTRA PARA BOTÓN INICIO (NO SE BORRA NADA) =================
+app.get('/panel_admin', (req, res) => {
+    res.redirect('/panel');
+});
+
+// ================= API LOGIN =================
+app.post('/api/login', async (req, res) => {
     try {
-        const r = await pool.query(
-            'SELECT * FROM usuarios WHERE usuario = $1',
+        const { usuario, clave } = req.body;
+
+        const result = await pool.query(
+            'SELECT id, nombre, usuario, clave, rol FROM usuarios WHERE usuario = $1',
             [usuario]
         );
 
-        if (!r.rows.length) {
+        if (result.rows.length === 0) {
             return res.json({ success: false, message: 'Usuario no encontrado' });
         }
 
-        const user = r.rows[0];
+        const user = result.rows[0];
 
-        // ⚠️ contraseña en texto plano (como tienes en la BD)
-        if (clave !== user.clave) {
-            return res.json({ success: false, message: 'Contraseña incorrecta' });
+        if (clave.trim() !== user.clave.trim()) {
+            return res.json({ success: false, message: 'Clave incorrecta' });
         }
-
-        req.session.usuario = {
-            id: user.id,
-            nombre: user.nombre,
-            rol: user.rol
-        };
 
         res.json({
             success: true,
             userId: user.id,
-            redirect: user.rol === 'admin' ? '/panel.html' : '/usuario.html'
+            redirect: user.rol === 'admin' ? '/panel' : '/panel_usuario'
         });
 
     } catch (err) {
-        console.error('❌ LOGIN:', err.message);
-        res.json({ success: false, message: 'Error del servidor' });
+        console.error('❌ ERROR LOGIN:', err.message);
+        res.status(500).json({ success: false, message: 'Error del servidor' });
     }
 });
 
-// ================= SESIÓN =================
-app.get('/api/session', (req, res) => {
-    if (!req.session.usuario) {
-        return res.json({ logged: false });
-    }
-    res.json({ logged: true, usuario: req.session.usuario });
-});
-
-// ================= USUARIOS (ADMIN) =================
-app.get('/api/usuarios', async (req, res) => {
+// ================= API REGISTRO =================
+app.post('/api/registro', async (req, res) => {
     try {
-        const r = await pool.query('SELECT * FROM usuarios ORDER BY id');
-        res.json(r.rows);
-    } catch {
-        res.status(500).json([]);
-    }
-});
+        const { nombre, correo, usuario, clave, telefono, provincia, ciudad, direccion } = req.body;
 
-// ================= PRODUCTOS =================
-app.get('/api/productos', async (req, res) => {
-    try {
-        const r = await pool.query('SELECT * FROM productos ORDER BY id');
-        res.json(r.rows);
-    } catch {
-        res.status(500).json([]);
-    }
-});
+        const check = await pool.query(
+            'SELECT id FROM usuarios WHERE usuario = $1 OR correo = $2',
+            [usuario, correo]
+        );
 
-// ================= INVENTARIO =================
-app.get('/api/inventario', async (req, res) => {
-    try {
-        const r = await pool.query(`
-            SELECT 
-                p.id,
-                p.nombre,
-                COALESCE(SUM(d.cantidad),0) AS cantidad,
-                COALESCE(SUM(d.peso_subtotal),0) AS peso
-            FROM productos p
-            LEFT JOIN detalle_pedidos d ON d.id_producto = p.id
-            GROUP BY p.id, p.nombre
-            ORDER BY p.nombre
-        `);
-        res.json(r.rows);
+        if (check.rows.length > 0) {
+            return res.json({ success: false, message: 'Usuario o correo ya existe' });
+        }
+
+        await pool.query(`
+            INSERT INTO usuarios
+            (nombre, correo, usuario, clave, rol, telefono, provincia, ciudad, direccion)
+            VALUES ($1,$2,$3,$4,'cliente',$5,$6,$7,$8)
+        `, [nombre, correo, usuario, clave, telefono, provincia, ciudad, direccion]);
+
+        res.json({ success: true });
+
     } catch (err) {
-        console.error('❌ INVENTARIO:', err.message);
-        res.status(500).json([]);
+        res.status(500).json({ success: false, message: err.message });
     }
 });
 
-// ================= CREAR PEDIDO =================
-app.post('/api/pedidos', async (req, res) => {
-    const { id_usuario, materiales } = req.body;
+// ================= PRODUCTOS Y CARRITO =================
+app.get('/api/productos-cliente', async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT id, nombre, peso_kg, stock FROM productos WHERE stock > 0'
+        );
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+app.post('/api/agregar-al-carrito', (req, res) => {
+    const { id_producto, cantidad } = req.body;
+    carritoTemporal[id_producto] = (carritoTemporal[id_producto] || 0) + Number(cantidad);
+    res.json({ success: true });
+});
+
+app.post('/api/finalizar-pedido', async (req, res) => {
+    const { id_usuario } = req.body;
 
     try {
+        await pool.query('BEGIN');
+
+        const pedido = await pool.query(
+            'INSERT INTO pedidos (id_usuario, fecha, total_peso, estado) VALUES ($1,NOW(),0,$2) RETURNING id',
+            [id_usuario, 'Pendiente']
+        );
+
+        const idPedido = pedido.rows[0].id;
         let total = 0;
-        materiales.forEach(m => total += m.peso_subtotal);
 
-        const pedido = await pool.query(`
-            INSERT INTO pedidos (id_usuario, total_peso, estado)
-            VALUES ($1, $2, 'pendiente')
-            RETURNING id
-        `, [id_usuario, total]);
+        for (const id in carritoTemporal) {
+            const cant = carritoTemporal[id];
 
-        const id_pedido = pedido.rows[0].id;
+            const p = await pool.query(
+                'SELECT * FROM productos WHERE id = $1',
+                [id]
+            );
 
-        for (const m of materiales) {
-            await pool.query(`
-                INSERT INTO detalle_pedidos
-                (id_pedido, id_producto, cantidad, peso_subtotal)
-                VALUES ($1, $2, $3, $4)
-            `, [id_pedido, m.id_producto, m.cantidad, m.peso_subtotal]);
+            const sub = p.rows[0].peso_kg * cant;
+            total += sub;
+
+            await pool.query(
+                'INSERT INTO detalle_pedidos (id_pedido, id_producto, cantidad, peso_subtotal) VALUES ($1,$2,$3,$4)',
+                [idPedido, id, cant, sub]
+            );
+
+            await pool.query(
+                'UPDATE productos SET stock = stock - $1 WHERE id = $2',
+                [cant, id]
+            );
         }
 
-        res.json({ ok: true, id_pedido });
+        await pool.query(
+            'UPDATE pedidos SET total_peso = $1 WHERE id = $2',
+            [total, idPedido]
+        );
+
+        await pool.query('COMMIT');
+
+        carritoTemporal = {};
+        res.json({ success: true });
 
     } catch (err) {
-        console.error('❌ PEDIDO:', err.message);
-        res.status(500).json({ ok: false });
+        await pool.query('ROLLBACK');
+        res.status(500).json({ success: false, message: err.message });
     }
 });
 
-// ================= MIS PEDIDOS =================
-app.get('/api/usuario/mis-pedidos/:id', async (req, res) => {
+// ================= ADMIN - USUARIOS =================
+app.get('/api/admin/usuarios', async (req, res) => {
     try {
-        const r = await pool.query(`
-            SELECT id, fecha, total_peso, estado
-            FROM pedidos
-            WHERE id_usuario = $1
-            ORDER BY fecha DESC
-        `, [req.params.id]);
-        res.json(r.rows);
-    } catch {
-        res.status(500).json([]);
-    }
-});
-
-// ================= DETALLE PEDIDO =================
-app.get('/api/pedidos/detalle/:id', async (req, res) => {
-    try {
-        const pedido = await pool.query(`
-            SELECT 
-                p.id,
-                p.fecha,
-                p.total_peso,
-                u.nombre,
-                u.correo,
-                u.telefono,
-                u.ciudad,
-                u.provincia,
-                u.direccion
-            FROM pedidos p
-            JOIN usuarios u ON u.id = p.id_usuario
-            WHERE p.id = $1
-        `, [req.params.id]);
-
-        if (!pedido.rows.length) {
-            return res.status(404).json({ error: 'Pedido no encontrado' });
-        }
-
-        const detalles = await pool.query(`
-            SELECT pr.nombre AS material, d.cantidad, d.peso_subtotal
-            FROM detalle_pedidos d
-            JOIN productos pr ON pr.id = d.id_producto
-            WHERE d.id_pedido = $1
-        `, [req.params.id]);
-
-        res.json({ pedido: pedido.rows[0], detalles: detalles.rows });
-
-    } catch (err) {
-        console.error('❌ DETALLE PEDIDO:', err.message);
-        res.status(500).json({ error: 'Error' });
-    }
-});
-
-// ================= REPORTES =================
-app.get('/api/reportes', async (req, res) => {
-    try {
-        const r = await pool.query(`
-            SELECT DATE(fecha) AS fecha,
-                   COUNT(*) AS pedidos,
-                   SUM(total_peso) AS total
-            FROM pedidos
-            GROUP BY DATE(fecha)
-            ORDER BY fecha DESC
+        const result = await pool.query(`
+            SELECT id, nombre, usuario, rol
+            FROM usuarios
+            ORDER BY id ASC
         `);
-        res.json(r.rows);
-    } catch {
+        res.json(result.rows);
+    } catch (err) {
+        console.error('❌ ERROR LISTAR USUARIOS:', err.message);
         res.status(500).json([]);
+    }
+});
+
+app.put('/api/admin/usuarios/rol', async (req, res) => {
+    const { id, rol } = req.body;
+
+    try {
+        await pool.query(
+            'UPDATE usuarios SET rol = $1 WHERE id = $2',
+            [rol, id]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        console.error('❌ ERROR CAMBIAR ROL:', err.message);
+        res.status(500).json({ success: false });
+    }
+});
+
+app.delete('/api/admin/usuarios/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        await pool.query(
+            'DELETE FROM usuarios WHERE id = $1',
+            [id]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        console.error('❌ ERROR ELIMINAR USUARIO:', err.message);
+        res.status(500).json({ success: false });
     }
 });
 
 // ================= LOGOUT =================
 app.get('/logout', (req, res) => {
-    req.session.destroy(() => res.redirect('/login.html'));
+    carritoTemporal = {};
+    res.redirect('/login');
 });
 
-// ================= SERVER =================
+// ================= PUERTO =================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log('=================================');
-    console.log('✅ RECICLADORA 4R ACTIVA');
-    console.log('🚀 PUERTO:', PORT);
-    console.log('=================================');
+    console.log(`✅ RECICLADORA 4R ACTIVA EN PUERTO ${PORT}`);
 });
