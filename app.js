@@ -80,7 +80,17 @@ app.post('/api/registro', async (req, res) => {
     res.json({ success:true });
 });
 
-// ================= PRODUCTOS =================
+// ================= PRODUCTOS / INVENTARIO =================
+
+// NUEVO: Ruta para obtener productos que llena la tabla de inventario del admin
+app.get('/api/admin/productos', async (req, res) => {
+    try {
+        const r = await pool.query('SELECT * FROM productos ORDER BY id ASC');
+        res.json(r.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 // NUEVO: Obtener todos los productos para la tabla del administrador
 app.get('/api/productos', async (req, res) => {
@@ -251,6 +261,24 @@ app.delete('/api/admin/usuarios/:id', async (req, res) => {
 });
 
 // ================= REPORTES (ACTUALIZADO) =================
+
+// Esta es la ruta que tu página de reportes consultará para mostrar los números
+app.get('/api/reportes', async (req, res) => {
+    try {
+        const pedidos = await pool.query('SELECT COUNT(*) FROM pedidos');
+        const peso = await pool.query('SELECT SUM(total_peso) FROM pedidos');
+        const clientes = await pool.query("SELECT COUNT(*) FROM usuarios WHERE rol='cliente'");
+
+        res.json({
+            total_pedidos: pedidos.rows[0].count,
+            peso_total: peso.rows[0].sum || 0,
+            total_clientes: clientes.rows[0].count
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.get('/api/admin/reportes', async (req, res) => {
     try {
         const pedidos = await pool.query('SELECT COUNT(*) FROM pedidos');
@@ -281,4 +309,3 @@ app.listen(PORT, () => {
     console.log(`🚀 PUERTO: ${PORT}`);
     console.log('=================================');
 });
-
