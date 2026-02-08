@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-const pool = require('./db'); // conexión a PostgreSQL/Supabase
+const pool = require('./db');
 const nodemailer = require('nodemailer');
 
 const app = express();
@@ -9,12 +9,12 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Servir archivos estáticos desde la raíz del proyecto
+// Servir archivos estáticos desde la raíz
 app.use(express.static(__dirname));
 
 let carritoTemporal = {};
 
-// ================= CONFIGURACIÓN EMAIL (NODEMAILER) =================
+// ================= EMAIL =================
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -25,10 +25,21 @@ const transporter = nodemailer.createTransport({
 
 // ================= RUTAS HTML =================
 const htmlFiles = [
-  'Recicladora4R', 'login', 'Registro', 'restablecer',
-  'panel', 'panel_usuario', 'carrito', 'mis_pedidos',
-  'gestionar_pedidos', 'productos', 'usuarios', 'reportes',
-  'gestion_ventas', 'finalizar_pedido', 'ver_detalle'
+    'Recicladora4R',
+    'login',
+    'Registro',
+    'restablecer',
+    'panel',
+    'panel_usuario',
+    'carrito',
+    'mis_pedidos',
+    'gestionar_pedidos',
+    'productos',
+    'usuarios',
+    'reportes',
+    'gestion_ventas',
+    'finalizar_pedido',
+    'ver_detalle'
 ];
 
 htmlFiles.forEach(file => {
@@ -37,7 +48,7 @@ htmlFiles.forEach(file => {
     });
 });
 
-// ================= API LOGIN =================
+// ================= LOGIN =================
 app.post('/api/login', async (req, res) => {
     try {
         const { usuario, clave } = req.body;
@@ -57,7 +68,6 @@ app.post('/api/login', async (req, res) => {
             return res.json({ success: false, message: 'Clave incorrecta' });
         }
 
-        // 🔧 CORRECCIÓN AQUÍ
         res.json({
             success: true,
             userId: user.id,
@@ -65,18 +75,24 @@ app.post('/api/login', async (req, res) => {
         });
 
     } catch (err) {
-        console.error("❌ ERROR EN LOGIN:", err.message);
-        res.status(500).json({
-            success: false,
-            message: 'Error de conexión con el servidor'
-        });
+        console.error('❌ ERROR LOGIN:', err.message);
+        res.status(500).json({ success: false, message: 'Error de servidor' });
     }
 });
 
-// ================= API REGISTRO =================
+// ================= REGISTRO =================
 app.post('/api/registro', async (req, res) => {
     try {
-        const { nombre, correo, usuario, clave, telefono, provincia, ciudad, direccion } = req.body;
+        const {
+            nombre,
+            correo,
+            usuario,
+            clave,
+            telefono,
+            provincia,
+            ciudad,
+            direccion
+        } = req.body;
 
         const check = await pool.query(
             'SELECT id FROM usuarios WHERE usuario = $1 OR correo = $2',
@@ -100,7 +116,34 @@ app.post('/api/registro', async (req, res) => {
     }
 });
 
-// ================= PRODUCTOS Y CARRITO =================
+// ================= LISTAR USUARIOS (ADMIN) =================
+app.get('/api/usuarios', async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT 
+                id,
+                nombre,
+                correo,
+                usuario,
+                rol,
+                telefono,
+                provincia,
+                ciudad,
+                direccion,
+                fecha_registro
+            FROM usuarios
+            ORDER BY id ASC
+        `);
+
+        res.json(result.rows);
+
+    } catch (err) {
+        console.error('❌ ERROR USUARIOS:', err.message);
+        res.status(500).json({ error: 'Error al obtener usuarios' });
+    }
+});
+
+// ================= PRODUCTOS =================
 app.get('/api/productos-cliente', async (req, res) => {
     try {
         const result = await pool.query(
@@ -112,6 +155,7 @@ app.get('/api/productos-cliente', async (req, res) => {
     }
 });
 
+// ================= CARRITO =================
 app.post('/api/agregar-al-carrito', (req, res) => {
     const { id_producto, cantidad } = req.body;
     carritoTemporal[id_producto] = (carritoTemporal[id_producto] || 0) + Number(cantidad);
@@ -134,11 +178,7 @@ app.post('/api/finalizar-pedido', async (req, res) => {
 
         for (const id in carritoTemporal) {
             const cant = carritoTemporal[id];
-
-            const p = await pool.query(
-                'SELECT * FROM productos WHERE id = $1',
-                [id]
-            );
+            const p = await pool.query('SELECT * FROM productos WHERE id = $1', [id]);
 
             const sub = p.rows[0].peso_kg * cant;
             total += sub;
@@ -160,7 +200,6 @@ app.post('/api/finalizar-pedido', async (req, res) => {
         );
 
         await pool.query('COMMIT');
-
         carritoTemporal = {};
         res.json({ success: true });
 
