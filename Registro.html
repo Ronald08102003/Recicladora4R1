@@ -4,165 +4,237 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recicladora 4R | Registro Institucional</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>♻️</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --verde-primario: #2e7d32;
             --verde-oscuro: #1b5e20;
-            --gris-borde: #e0e0e0;
-            --gris-fondo: #f8f9fa;
-            --sombra: 0 10px 30px rgba(0,0,0,0.08);
+            --blanco-cristal: rgba(255, 255, 255, 0.92);
+            --sombra-elegante: 0 20px 40px rgba(0,0,0,0.15);
         }
 
-        body { 
-            margin:0; font-family:"Segoe UI", Roboto, sans-serif; 
-            background: var(--gris-fondo); color:#333; 
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            /* Fondo Institucional Unificado */
+            background: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), 
+                        url('fondoA.jpg') no-repeat center center fixed;
+            background-size: cover;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #2c3e50;
         }
 
-        header { 
-            display:flex; align-items:center; justify-content:center; 
-            background:#ffffff; padding:25px; border-bottom:4px solid var(--verde-primario); 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        header {
+            background: white;
+            padding: 15px 5%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            position: relative;
         }
-        .logo { position:absolute; left:90px; }
-        .logo img { width:120px; }
-        .titulo h1 { margin:0; font-size:32px; color: var(--verde-oscuro); font-weight: 800; }
-        
-        .registro-container { 
-            background:white; max-width:650px; margin:50px auto; 
-            padding:50px; border:1px solid var(--gris-borde); 
-            border-radius: 12px; box-shadow: var(--sombra);
-        }
-        
-        .registro-container h2 { text-align:center; color: var(--verde-oscuro); margin-bottom: 35px; }
 
-        .section-header { grid-column: span 2; display: flex; align-items: center; margin-top: 15px; }
-        .section-title { font-size: 11px; text-transform: uppercase; color: var(--verde-primario); font-weight: 800; margin-right: 15px; }
-        .section-line { height: 1px; background: #eee; width: 100%; }
-        
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .header-content img { height: 50px; }
+        .brand-info h1 { margin: 0; font-size: 22px; color: var(--verde-oscuro); font-weight: 800; }
+
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .registro-card {
+            background: var(--blanco-cristal);
+            backdrop-filter: blur(12px);
+            width: 100%;
+            max-width: 700px;
+            padding: 45px;
+            border-radius: 24px;
+            box-shadow: var(--sombra-elegante);
+            animation: fadeIn 0.8s ease-out;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .registro-card h2 {
+            text-align: center;
+            color: var(--verde-oscuro);
+            margin-bottom: 35px;
+            font-weight: 700;
+            font-size: 26px;
+        }
+
+        .section-header { grid-column: span 2; display: flex; align-items: center; margin-top: 20px; margin-bottom: 10px; }
+        .section-title { font-size: 11px; text-transform: uppercase; color: var(--verde-primario); font-weight: 800; margin-right: 15px; letter-spacing: 1px; }
+        .section-line { height: 1px; background: rgba(0,0,0,0.1); width: 100%; }
+
         .grid-form { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .full-width { grid-column: span 2; }
-        
-        label { font-weight:700; font-size:13px; margin-bottom: 8px; color: #444; display: block; }
-        
-        input, select { 
-            width:100%; padding:13px 16px; border:1.5px solid var(--gris-borde); 
-            font-size:14px; border-radius: 8px; box-sizing: border-box; 
-            background: #fff; transition: 0.2s;
+
+        label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 8px; color: #555; text-transform: uppercase; }
+
+        input, select {
+            width: 100%;
+            padding: 14px;
+            border: 1.5px solid #ddd;
+            border-radius: 12px;
+            box-sizing: border-box;
+            font-size: 15px;
+            background: white;
+            transition: 0.3s;
         }
 
-        input:focus, select:focus { outline: none; border-color: var(--verde-primario); }
-        
-        button { 
-            width:100%; background: var(--verde-primario); color:white; border:none; 
-            padding:16px; font-size: 16px; font-weight: 700; cursor:pointer; 
-            border-radius: 8px; text-transform: uppercase; margin-top: 30px;
-        }
-        
-        button:hover { background: var(--verde-oscuro); transform: translateY(-2px); }
+        input:focus, select:focus { outline: none; border-color: var(--verde-primario); box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.1); }
 
-        .mensaje { text-align:center; margin-top:25px; padding: 15px; border-radius: 8px; font-size: 14px; font-weight: bold; }
-        .exito { background: #e8f5e9; color: var(--verde-oscuro); border: 1px solid #c8e6c9; }
+        button {
+            width: 100%;
+            background: var(--verde-primario);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 30px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover { background: var(--verde-oscuro); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        button:disabled { background: #9e9e9e; cursor: not-allowed; transform: none; }
+
+        .mensaje { text-align: center; margin-top: 25px; padding: 15px; border-radius: 12px; font-size: 14px; font-weight: 600; }
+        .exito { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
         .error { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
-        
-        .volver { display:block; text-align:center; margin-top:30px; text-decoration:none; color: #777; font-size:14px; }
+
+        .volver { display: block; text-align: center; margin-top: 30px; text-decoration: none; color: #666; font-size: 14px; font-weight: 600; transition: 0.3s; }
+        .volver:hover { color: var(--verde-primario); }
+
+        /* ADAPTACIÓN MÓVIL */
+        @media (max-width: 600px) {
+            .grid-form { grid-template-columns: 1fr; }
+            .section-header, .full-width { grid-column: span 1; }
+            .registro-card { padding: 30px 20px; border-radius: 15px; }
+            header { padding: 10px; }
+            .header-content { flex-direction: column; text-align: center; gap: 5px; }
+        }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="logo"><img src="logo.png" alt="Recicladora 4R"></div>
-    <div class="titulo"><h1>Recicladora 4R</h1></div>
+    <div class="header-content">
+        <img src="logo.png" alt="Recicladora 4R">
+        <div class="brand-info"><h1>Recicladora 4R</h1></div>
+    </div>
 </header>
 
-<div class="registro-container">
-    <h2>Registro de Usuario</h2>
+<div class="main-wrapper">
+    <div class="registro-card">
+        <h2>Registro Institucional</h2>
 
-    <form id="formRegistro">
-        <div class="grid-form">
-            <div class="section-header"><span class="section-title">Identificación</span><div class="section-line"></div></div>
-            
-            <div class="field-group full-width">
-                <label>Nombre Completo</label>
-                <input type="text" id="nombre" placeholder="Ej: Ronald Valdivieso" required>
+        <form id="formRegistro">
+            <div class="grid-form">
+                <div class="section-header"><span class="section-title">Identificación</span><div class="section-line"></div></div>
+                
+                <div class="full-width">
+                    <label>Nombre Completo</label>
+                    <input type="text" id="nombre" placeholder="Ej: Ronald Valdivieso" required>
+                </div>
+
+                <div>
+                    <label>Teléfono (10 dígitos)</label>
+                    <input type="text" id="telefono" maxlength="10" placeholder="0987654321" required>
+                </div>
+
+                <div>
+                    <label>Correo Electrónico</label>
+                    <input type="email" id="correo" placeholder="ejemplo@correo.com" required>
+                </div>
+
+                <div class="section-header"><span class="section-title">Ubicación en Ecuador</span><div class="section-line"></div></div>
+
+                <div>
+                    <label>Provincia</label>
+                    <select id="provincia" required>
+                        <option value="">Seleccione...</option>
+                        <option value="Azuay">Azuay</option>
+                        <option value="Bolívar">Bolívar</option>
+                        <option value="Cañar">Cañar</option>
+                        <option value="Carchi">Carchi</option>
+                        <option value="Chimborazo">Chimborazo</option>
+                        <option value="Cotopaxi">Cotopaxi</option>
+                        <option value="El Oro">El Oro</option>
+                        <option value="Esmeraldas">Esmeraldas</option>
+                        <option value="Galápagos">Galápagos</option>
+                        <option value="Guayas">Guayas</option>
+                        <option value="Imbabura">Imbabura</option>
+                        <option value="Loja">Loja</option>
+                        <option value="Los Ríos">Los Ríos</option>
+                        <option value="Manabí">Manabí</option>
+                        <option value="Morona Santiago">Morona Santiago</option>
+                        <option value="Napo">Napo</option>
+                        <option value="Orellana">Orellana</option>
+                        <option value="Pastaza">Pastaza</option>
+                        <option value="Pichincha">Pichincha</option>
+                        <option value="Santa Elena">Santa Elena</option>
+                        <option value="Santo Domingo">Santo Domingo</option>
+                        <option value="Sucumbíos">Sucumbíos</option>
+                        <option value="Tungurahua">Tungurahua</option>
+                        <option value="Zamora Chinchipe">Zamora Chinchipe</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Ciudad</label>
+                    <select id="ciudad" required disabled>
+                        <option value="">Seleccione provincia...</option>
+                    </select>
+                </div>
+
+                <div class="full-width">
+                    <label>Dirección Exacta</label>
+                    <input type="text" id="direccion" placeholder="Calle principal y transversal" required>
+                </div>
+
+                <div class="section-header"><span class="section-title">Credenciales</span><div class="section-line"></div></div>
+
+                <div>
+                    <label>Usuario</label>
+                    <input type="text" id="usuario" placeholder="Nombre de usuario" required>
+                </div>
+
+                <div>
+                    <label>Contraseña</label>
+                    <input type="password" id="clave" placeholder="••••••••" required>
+                </div>
             </div>
 
-            <div class="field-group">
-                <label>Teléfono (10 dígitos)</label>
-                <input type="text" id="telefono" maxlength="10" placeholder="0987654321" required>
-            </div>
+            <button type="submit" id="btnRegistro">Finalizar Registro</button>
+        </form>
 
-            <div class="field-group">
-                <label>Correo Electrónico</label>
-                <input type="email" id="correo" placeholder="ejemplo@correo.com" required>
-            </div>
-
-            <div class="section-header"><span class="section-title">Ubicación en Ecuador</span><div class="section-line"></div></div>
-
-            <div class="field-group">
-                <label>Provincia</label>
-                <select id="provincia" required>
-                    <option value="">Seleccione...</option>
-                    <option value="Azuay">Azuay</option>
-                    <option value="Bolívar">Bolívar</option>
-                    <option value="Cañar">Cañar</option>
-                    <option value="Carchi">Carchi</option>
-                    <option value="Chimborazo">Chimborazo</option>
-                    <option value="Cotopaxi">Cotopaxi</option>
-                    <option value="El Oro">El Oro</option>
-                    <option value="Esmeraldas">Esmeraldas</option>
-                    <option value="Galápagos">Galápagos</option>
-                    <option value="Guayas">Guayas</option>
-                    <option value="Imbabura">Imbabura</option>
-                    <option value="Loja">Loja</option>
-                    <option value="Los Ríos">Los Ríos</option>
-                    <option value="Manabí">Manabí</option>
-                    <option value="Morona Santiago">Morona Santiago</option>
-                    <option value="Napo">Napo</option>
-                    <option value="Orellana">Orellana</option>
-                    <option value="Pastaza">Pastaza</option>
-                    <option value="Pichincha">Pichincha</option>
-                    <option value="Santa Elena">Santa Elena</option>
-                    <option value="Santo Domingo">Santo Domingo</option>
-                    <option value="Sucumbíos">Sucumbíos</option>
-                    <option value="Tungurahua">Tungurahua</option>
-                    <option value="Zamora Chinchipe">Zamora Chinchipe</option>
-                </select>
-            </div>
-
-            <div class="field-group">
-                <label>Ciudad</label>
-                <select id="ciudad" required disabled>
-                    <option value="">Seleccione provincia primero</option>
-                </select>
-            </div>
-
-            <div class="field-group full-width">
-                <label>Dirección Exacta</label>
-                <input type="text" id="direccion" placeholder="Calle principal y transversal" required>
-            </div>
-
-            <div class="section-header"><span class="section-title">Credenciales</span><div class="section-line"></div></div>
-
-            <div class="field-group">
-                <label>Usuario</label>
-                <input type="text" id="usuario" required>
-            </div>
-
-            <div class="field-group">
-                <label>Contraseña</label>
-                <input type="password" id="clave" required>
-            </div>
-        </div>
-
-        <button type="submit" id="btnRegistro">Finalizar Registro</button>
-    </form>
-
-    <div id="mensajeContainer"></div>
-    <a href="/login" class="volver">← Volver al inicio de sesión</a>
+        <div id="mensajeContainer"></div>
+        <a href="/login" class="volver">← Ya tengo cuenta. Iniciar sesión</a>
+    </div>
 </div>
 
 <script>
-    // Diccionario Completo de Provincias y Ciudades
     const ciudadesEcuador = {
         "Azuay": ["Cuenca", "Gualaceo", "Paute", "Santa Isabel"],
         "Bolívar": ["Guaranda", "San Miguel", "Chimbo"],
@@ -196,18 +268,14 @@
     provinciaSelect.addEventListener('change', function() {
         const provincia = this.value;
         ciudadSelect.innerHTML = '<option value="">Seleccione ciudad...</option>';
-        
         if(provincia && ciudadesEcuador[provincia]) {
             ciudadSelect.disabled = false;
             ciudadesEcuador[provincia].forEach(ciudad => {
                 let option = document.createElement('option');
-                option.value = ciudad;
-                option.text = ciudad;
+                option.value = ciudad; option.text = ciudad;
                 ciudadSelect.appendChild(option);
             });
-        } else {
-            ciudadSelect.disabled = true;
-        }
+        } else { ciudadSelect.disabled = true; }
     });
 
     document.getElementById('formRegistro').addEventListener('submit', async (e) => {
@@ -216,14 +284,12 @@
         const mensajeDiv = document.getElementById('mensajeContainer');
         const telefono = document.getElementById('telefono').value;
         
-        // Validación de Teléfono (10 dígitos)
         if (telefono.length !== 10 || isNaN(telefono)) {
-            mensajeDiv.innerHTML = '<div class="mensaje error">❌ El teléfono debe tener exactamente 10 dígitos numéricos.</div>';
+            mensajeDiv.innerHTML = '<div class="mensaje error">❌ El teléfono debe tener 10 dígitos numéricos.</div>';
             return;
         }
 
-        btn.innerText = "Procesando...";
-        btn.disabled = true;
+        btn.innerText = "PROCESANDO..."; btn.disabled = true;
 
         const datos = {
             nombre: document.getElementById('nombre').value,
@@ -243,19 +309,16 @@
                 body: JSON.stringify(datos)
             });
             const result = await res.json();
-            
             if(result.success) {
-                mensajeDiv.innerHTML = '<div class="mensaje exito">✅ Registro completado con éxito. Redirigiendo...</div>';
+                mensajeDiv.innerHTML = '<div class="mensaje exito">✅ Registro exitoso. Redirigiendo...</div>';
                 setTimeout(() => window.location.href = '/login', 2000);
             } else {
                 mensajeDiv.innerHTML = `<div class="mensaje error">❌ ${result.message}</div>`;
-                btn.disabled = false;
-                btn.innerText = "Finalizar Registro";
+                btn.disabled = false; btn.innerText = "Finalizar Registro";
             }
         } catch (error) {
-            mensajeDiv.innerHTML = '<div class="mensaje error">⚠️ Error: Sin conexión con el servidor.</div>';
-            btn.disabled = false;
-            btn.innerText = "Finalizar Registro";
+            mensajeDiv.innerHTML = '<div class="mensaje error">⚠️ Error de conexión.</div>';
+            btn.disabled = false; btn.innerText = "Finalizar Registro";
         }
     });
 </script>
