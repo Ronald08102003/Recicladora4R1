@@ -3,200 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recicladora 4R | Restablecer Clave</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>♻️</text></svg>">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>Recicladora 4R | Restablecer</title>
     <style>
-        :root {
-            --verde-primario: #2e7d32;
-            --verde-oscuro: #1b5e20;
-            --blanco-cristal: rgba(255, 255, 255, 0.92);
-        }
-
-        /* Animación suave de entrada */
-        @keyframes fadeIn { 
-            from { opacity: 0; transform: translateY(15px); } 
-            to { opacity: 1; transform: translateY(0); } 
-        }
-
-        body {
-            margin: 0;
-            font-family: 'Inter', sans-serif;
-            /* Fondo institucional unificado con overlay oscuro */
-            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), 
-                        url('fondoA.jpg') no-repeat center center fixed;
-            background-size: cover;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        .card {
-            background: var(--blanco-cristal);
-            backdrop-filter: blur(12px);
-            padding: 40px 30px;
-            border-radius: 24px;
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.3);
-            animation: fadeIn 0.8s ease-out;
-        }
-
-        h2 { color: var(--verde-oscuro); margin-bottom: 10px; font-weight: 800; font-size: 26px; }
-        p { color: #444; font-size: 14px; margin-bottom: 25px; line-height: 1.5; }
-
-        .input-group { position: relative; margin-bottom: 15px; }
-
-        input {
-            width: 100%;
-            padding: 14px;
-            border: 1.5px solid #ddd;
-            border-radius: 12px;
-            box-sizing: border-box;
-            font-size: 16px;
-            background: white;
-            transition: 0.3s ease;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: var(--verde-primario);
-            box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.1);
-        }
-
-        button {
-            width: 100%;
-            padding: 16px;
-            background: var(--verde-primario);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: 0.3s;
-            margin-top: 10px;
-        }
-
-        button:hover {
-            background: var(--verde-oscuro);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('fondoA.jpg') no-repeat center center fixed; background-size: cover; height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .card { background: rgba(255,255,255,0.95); padding: 30px; border-radius: 20px; width: 90%; max-width: 380px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.3); }
+        h2 { color: #1b5e20; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1.5px solid #ddd; border-radius: 10px; box-sizing: border-box; }
+        button { width: 100%; padding: 14px; background: #2e7d32; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        button:hover { background: #1b5e20; }
         .hidden { display: none; }
-
-        #mensaje {
-            margin-top: 20px;
-            font-size: 14px;
-            font-weight: 600;
-            min-height: 20px;
-        }
-
-        .volver {
-            display: block;
-            margin-top: 25px;
-            color: var(--verde-primario);
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 600;
-            transition: 0.2s;
-        }
-
-        .volver:hover { color: var(--verde-oscuro); text-decoration: underline; }
-
-        /* OPTIMIZACIÓN MÓVIL */
-        @media (max-width: 480px) {
-            .card { padding: 35px 20px; border-radius: 20px; }
-            h2 { font-size: 22px; }
-            p { font-size: 13px; }
-        }
     </style>
 </head>
 <body>
-
     <div class="card">
-        <h2>Restablecer</h2>
-        
+        <h2>Restablecer Clave</h2>
         <div id="paso1">
-            <p>Ingresa tu correo institucional. Te enviaremos un código de seguridad para validar tu identidad.</p>
-            <input type="email" id="correo" placeholder="ejemplo@correo.com" required>
-            <button onclick="enviarCodigo()">Obtener Código</button>
+            <p>Ingresa tu correo para recibir un código de seguridad.</p>
+            <input type="email" id="correo" placeholder="correo@ejemplo.com">
+            <button onclick="enviarCodigo()">Enviar Código</button>
         </div>
-
         <div id="paso2" class="hidden">
-            <p>Introduce el código de 6 dígitos enviado y define tu nueva contraseña de acceso.</p>
-            <input type="text" id="codigo" placeholder="Código de 6 dígitos" maxlength="6">
+            <p>Ingresa el código enviado y tu nueva clave.</p>
+            <input type="text" id="codigo" placeholder="Código de 6 dígitos">
             <input type="password" id="nuevaClave" placeholder="Nueva Contraseña">
-            <button onclick="cambiarClave()">Confirmar Cambio</button>
+            <button onclick="cambiarClave()">Actualizar Contraseña</button>
         </div>
-
-        <div id="mensaje"></div>
-        <a href="/login" class="volver">← Volver al inicio de sesión</a>
+        <p id="mensaje" style="margin-top:15px; font-size:14px; color:#d32f2f;"></p>
+        <a href="/login" style="color:#2e7d32; text-decoration:none; font-size:13px;">Volver al Login</a>
     </div>
 
     <script>
         async function enviarCodigo() {
-            const correo = document.getElementById('correo').value.trim();
-            const msg = document.getElementById('mensaje');
-            
-            if(!correo) { alert("Ingresa tu correo electrónico"); return; }
-            
-            msg.style.color = "#555";
-            msg.innerText = "Enviando código...";
-
-            try {
-                const res = await fetch('/api/enviar-codigo', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ correo })
-                });
-                const data = await res.json();
-                
-                if(data.success) {
-                    document.getElementById('paso1').classList.add('hidden');
-                    document.getElementById('paso2').classList.remove('hidden');
-                    msg.style.color = "#2e7d32";
-                    msg.innerText = "✅ Código enviado con éxito.";
-                } else {
-                    msg.innerText = "";
-                    alert("Error: " + (data.message || "Correo no válido"));
-                }
-            } catch (e) {
-                alert("Error de conexión con el servidor");
-            }
+            const correo = document.getElementById('correo').value;
+            const res = await fetch('/api/enviar-codigo', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ correo })
+            });
+            const data = await res.json();
+            if(data.success) {
+                document.getElementById('paso1').classList.add('hidden');
+                document.getElementById('paso2').classList.remove('hidden');
+                document.getElementById('mensaje').style.color = "green";
+                document.getElementById('mensaje').innerText = "Código enviado.";
+            } else { alert(data.message); }
         }
 
         async function cambiarClave() {
-            const correo = document.getElementById('correo').value.trim();
-            const codigo = document.getElementById('codigo').value.trim();
-            const nuevaClave = document.getElementById('nuevaClave').value.trim();
-
-            if(!codigo || !nuevaClave) { alert("Por favor, completa todos los campos"); return; }
-
-            try {
-                const res = await fetch('/api/restablecer-final', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ correo, codigo, nuevaClave })
-                });
-                const data = await res.json();
-                
-                if(data.success) {
-                    alert("¡Excelente! Tu contraseña ha sido actualizada correctamente.");
-                    window.location.href = "/login";
-                } else {
-                    alert("Error: " + data.message);
-                }
-            } catch (e) {
-                alert("Hubo un error al procesar el cambio");
-            }
+            const correo = document.getElementById('correo').value;
+            const codigo = document.getElementById('codigo').value;
+            const nuevaClave = document.getElementById('nuevaClave').value;
+            const res = await fetch('/api/restablecer-final', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ correo, codigo, nuevaClave })
+            });
+            const data = await res.json();
+            if(data.success) {
+                alert("Contraseña actualizada con éxito");
+                window.location.href = "/login";
+            } else { alert(data.message); }
         }
     </script>
 </body>
