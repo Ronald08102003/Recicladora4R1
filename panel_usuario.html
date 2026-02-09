@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Recicladora 4R | Panel de Usuario</title>
-
     <style>
         :root {
             --verde-primario: #2e7d32;
@@ -17,8 +16,14 @@
             font-family: "Segoe UI", Arial, sans-serif;
             background: var(--gris-fondo);
             color: #333;
+            animation: fadeBody 1s ease-in;
         }
 
+        @keyframes fadeBody { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* HEADER CORREGIDO CON FLEXBOX */
         header {
             display: flex;
             align-items: center;
@@ -26,28 +31,52 @@
             background: var(--blanco);
             padding: 15px 5%;
             border-bottom: 4px solid var(--verde-primario);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            animation: slideDown 0.8s ease-out;
         }
 
-        .logo-container img {
-            width: 90px;
-        }
-
-        .titulo-container {
-            text-align: center;
+        .logo-container {
             flex: 1;
         }
 
+        .logo-container img {
+            width: 100px;
+            height: auto;
+            display: block;
+        }
+
+        .titulo-container {
+            flex: 2;
+            text-align: center;
+        }
+
+        .titulo-container h1 {
+            margin: 0;
+            font-size: 26px;
+            color: var(--verde-oscuro);
+            text-transform: uppercase;
+        }
+
+        /* Espacio para equilibrar el flex */
+        header::after {
+            content: "";
+            flex: 1;
+        }
+        
         .menu {
             background: var(--verde-primario);
+            padding: 0;
             display: flex;
             justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
         .menu a {
             color: white;
-            padding: 15px 25px;
             text-decoration: none;
-            font-weight: bold;
+            padding: 15px 25px;
+            font-weight: 600;
+            transition: 0.3s;
             cursor: pointer;
         }
 
@@ -56,168 +85,233 @@
         }
 
         .contenido {
-            max-width: 1100px;
+            max-width: 1200px;
             margin: 40px auto;
-            background: white;
+            background: var(--blanco);
             padding: 40px;
-            border-radius: 10px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            animation: slideUp 0.8s ease-out;
         }
 
-        h2 {
-            color: var(--verde-primario);
-            border-bottom: 2px solid #eee;
-            padding-bottom: 10px;
-        }
+        .contenido h2 { color: var(--verde-primario); border-bottom: 2px solid #eee; padding-bottom: 10px; }
 
-        /* FORMULARIO */
+        /* FORMULARIO VENTA */
         .form-vender {
-            max-width: 500px;
-            margin: auto;
+            max-width: 600px;
+            margin: 20px auto;
             display: grid;
             gap: 15px;
         }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .form-group label {
-            font-weight: bold;
-            color: var(--verde-oscuro);
-        }
-
-        .form-group input,
-        .form-group select {
-            padding: 10px;
-            border-radius: 6px;
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group label { font-weight: bold; color: var(--verde-oscuro); }
+        .form-group input, .form-group select {
+            padding: 12px;
             border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 14px;
         }
-
         .btn-vender {
             background: var(--verde-primario);
             color: white;
             border: none;
-            padding: 14px;
-            font-size: 16px;
+            padding: 15px;
             font-weight: bold;
             cursor: pointer;
-            border-radius: 6px;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+        .btn-vender:hover { background: var(--verde-oscuro); transform: translateY(-2px); }
+
+        /* CATALOGO MODERNIZADO */
+        .catalogo {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        .card {
+            background: #fafafa;
+            border: 1px solid #eee;
+            padding: 25px;
+            text-align: center;
+            border-radius: 12px;
+            transition: 0.3s;
+        }
+        .card:hover {
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            transform: translateY(-5px);
+        }
+        .card h3 { color: var(--verde-oscuro); text-transform: capitalize; }
+        .card p { color: #666; font-size: 14px; }
+        .card input { 
+            width: 70px; 
+            padding: 8px; 
+            margin-bottom: 15px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px;
+            text-align: center;
+        }
+        .card button { 
+            background: var(--verde-primario); 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-weight: bold;
         }
 
-        footer {
-            background: var(--verde-oscuro);
-            color: white;
-            text-align: center;
-            padding: 20px;
-            margin-top: 60px;
+        footer { 
+            background: var(--verde-oscuro); 
+            color: white; 
+            text-align: center; 
+            padding: 25px; 
+            margin-top: 60px; 
         }
     </style>
 </head>
-
 <body>
 
 <header>
     <div class="logo-container">
-        <img src="logo.png">
+        <img src="logo.png" alt="Recicladora 4R">
     </div>
     <div class="titulo-container">
-        <h1>Panel de Usuario</h1>
+        <h1>Recicladora 4R | Panel de Usuario</h1>
     </div>
 </header>
 
 <div class="menu">
-    <a onclick="mostrarSeccion('catalogo')">Comprar</a>
-    <a onclick="mostrarSeccion('vender')">Vender Producto</a>
+    <a onclick="mostrarSeccion('catalogo-sec')">Comprar Materiales</a>
+    <a onclick="mostrarSeccion('vender-sec')">Vender mi Producto</a>
     <a href="/carrito">🛒 Carrito</a>
-    <a href="/logout">Salir</a>
+    <a href="/mis_pedidos">📋 Mis Pedidos</a>
+    <a href="/logout">Cerrar sesión</a>
 </div>
 
 <div class="contenido">
-
-    <!-- CATALOGO -->
-    <div id="catalogo">
-        <h2>Catálogo de Productos</h2>
-        <div id="contenedor-productos"></div>
+    <div id="catalogo-sec">
+        <h2>Catálogo de Materiales Disponibles</h2>
+        <div class="catalogo" id="contenedor-productos"></div>
     </div>
 
-    <!-- VENDER -->
-    <div id="vender" style="display:none;">
-        <h2>Vender material a Recicladora 4R</h2>
-
+    <div id="vender-sec" style="display: none;">
+        <h2>Vender mi Material a Recicladora 4R</h2>
+        <p>Complete todos los campos para que podamos procesar su oferta.</p>
+        
         <form class="form-vender" id="formVenta">
-
             <div class="form-group">
                 <label>Categoría</label>
-                <select id="categoria" required>
-                    <option value="">Seleccione...</option>
+                <select id="v_categoria" required>
+                    <option value="">Seleccione una categoría...</option>
                     <option value="Plástico">Plástico</option>
-                    <option value="Cartón/Papel">Cartón / Papel</option>
+                    <option value="Cartón/Papel">Cartón o Papel</option>
                     <option value="Vidrio">Vidrio</option>
-                    <option value="Metal">Metal</option>
+                    <option value="Metal">Metal/Chatarra</option>
                 </select>
             </div>
-
             <div class="form-group">
-                <label>Material</label>
-                <input type="text" id="material" required>
+                <label>Nombre del Producto</label>
+                <input type="text" id="v_nombre" placeholder="Ej: Botellas PET" required>
             </div>
-
-            <div class="form-group">
-                <label>Peso (kg)</label>
-                <input type="number" id="peso" step="0.01" required>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="form-group">
+                    <label>Peso Estimado (kg)</label>
+                    <input type="number" id="v_peso" step="0.01" min="0.1" required>
+                </div>
+                <div class="form-group">
+                    <label>Precio Estimado ($)</label>
+                    <input type="number" id="v_precio" step="0.01" min="0.01" required>
+                </div>
             </div>
-
-            <div class="form-group">
-                <label>Precio estimado ($)</label>
-                <input type="number" id="precio" step="0.01" required>
-            </div>
-
-            <button class="btn-vender">Enviar propuesta</button>
-            <div id="msgVenta"></div>
+            <button type="submit" class="btn-vender" id="btnEnviarOferta">ENVIAR PROPUESTA DE VENTA</button>
+            <div id="msgVenta" style="margin-top: 15px; text-align: center;"></div>
         </form>
     </div>
-
 </div>
 
-<footer>
-    © 2026 Recicladora 4R
-</footer>
+<footer><p>© 2026 Recicladora 4R | Gestión Ambiental Sostenible</p></footer>
 
 <script>
-function mostrarSeccion(id) {
-    document.getElementById("catalogo").style.display = "none";
-    document.getElementById("vender").style.display = "none";
-    document.getElementById(id).style.display = "block";
-}
+    function mostrarSeccion(id) {
+        document.getElementById('catalogo-sec').style.display = id === 'catalogo-sec' ? 'block' : 'none';
+        document.getElementById('vender-sec').style.display = id === 'vender-sec' ? 'block' : 'none';
+    }
 
-// ENVÍO DE PROPUESTA
-document.getElementById("formVenta").addEventListener("submit", async (e) => {
-    e.preventDefault();
+    async function cargarCatalogo() {
+        try {
+            const res = await fetch('/api/productos-cliente');
+            const productos = await res.json();
+            const contenedor = document.getElementById('contenedor-productos');
+            contenedor.innerHTML = '';
+            productos.forEach(p => {
+                contenedor.innerHTML += `
+                    <div class="card">
+                        <h3>${p.nombre}</h3>
+                        <p>Peso: ${p.peso_kg} kg | Stock: ${p.stock}</p>
+                        <input type="number" id="cant-${p.id}" min="1" max="${p.stock}" value="1">
+                        <br>
+                        <button onclick="agregar(${p.id})">Agregar al Carrito</button>
+                    </div>`;
+            });
+        } catch (e) { console.error(e); }
+    }
 
-    const datos = {
-        categoria: document.getElementById("categoria").value,
-        material: document.getElementById("material").value,
-        peso_kg: document.getElementById("peso").value,
-        precio_estimado: document.getElementById("precio").value
+    document.getElementById('formVenta').onsubmit = async (e) => {
+        e.preventDefault();
+        const msg = document.getElementById('msgVenta');
+        const btn = document.getElementById('btnEnviarOferta');
+        const idUsuario = localStorage.getItem('id_usuario');
+
+        if (!idUsuario) {
+            msg.innerHTML = "<span style='color:red;'>❌ Sesión no válida. Inicie sesión nuevamente.</span>";
+            return;
+        }
+
+        const datos = {
+            categoria: document.getElementById('v_categoria').value,
+            nombre: document.getElementById('v_nombre').value,
+            peso: document.getElementById('v_peso').value,
+            precio: document.getElementById('v_precio').value,
+            id_usuario: idUsuario
+        };
+
+        btn.disabled = true;
+        btn.innerText = "Enviando...";
+
+        try {
+            const res = await fetch('/api/vender-producto', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(datos)
+            });
+            const data = await res.json();
+            if(data.success) {
+                msg.innerHTML = "<span style='color:green;'>✅ ¡Propuesta enviada con éxito!</span>";
+                document.getElementById('formVenta').reset();
+            }
+        } catch (err) {
+            msg.innerHTML = "<span style='color:red;'>❌ Error de conexión.</span>";
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "ENVIAR PROPUESTA DE VENTA";
+        }
     };
 
-    const res = await fetch("/api/vender-producto", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(datos)
-    });
-
-    const data = await res.json();
-    document.getElementById("msgVenta").innerHTML =
-        data.success
-            ? "<span style='color:green'>✅ Propuesta enviada</span>"
-            : "<span style='color:red'>❌ Error</span>";
-
-    if (data.success) e.target.reset();
-});
+    async function agregar(id) {
+        const cant = document.getElementById(`cant-${id}`).value;
+        const res = await fetch('/api/agregar-al-carrito', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ id_producto: id, cantidad: cant })
+        });
+        if((await res.json()).success) window.location.href = '/carrito';
+    }
+    
+    window.onload = cargarCatalogo;
 </script>
-
 </body>
-</html>
-
+</html> 
