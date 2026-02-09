@@ -2,170 +2,224 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recicladora 4R | Panel Administrador</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>♻️</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --verde-primario: #2e7d32;
+            --verde-oscuro: #1b5e20;
+            --dorado-institucional: #c5a059;
+            --gris-fondo: #f4f7f6;
+            --blanco: #ffffff;
+            --sombra: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
         body {
             margin: 0;
-            font-family: "Segoe UI", Arial, sans-serif;
-            background: #f5f5f5;
+            font-family: 'Inter', sans-serif;
+            background: var(--gris-fondo);
+            display: flex;
+            min-height: 100vh;
             color: #333;
-            animation: fadeBody 1s ease-in;
         }
-        @keyframes fadeBody { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* HEADER */
-        header {
+        /* SIDEBAR PARA NAVEGACIÓN FORMAL */
+        .sidebar {
+            width: 260px;
+            background: var(--verde-oscuro);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            transition: 0.3s;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 30px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-header img { width: 80px; margin-bottom: 10px; }
+        .sidebar-header h2 { font-size: 18px; margin: 0; letter-spacing: 1px; }
+
+        .sidebar-menu { flex: 1; padding: 20px 0; }
+        .sidebar-menu a {
+            padding: 15px 25px;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
             display: flex;
             align-items: center;
-            justify-content: center;
-            background: #ffffff;
-            padding: 25px;
-            border-bottom: 4px solid #2e7d32;
-            position: relative;
-            animation: slideDown 0.8s ease-out;
-        }
-        .logo { position: absolute; left: 90px; }
-        .logo img { width: 120px; }
-        .titulo { text-align: center; }
-        .titulo h1 { margin: 0; font-size: 30px; color: #1b5e20; }
-        .titulo p { margin-top: 8px; font-size: 14px; color: #555; }
-
-        /* MENU */
-        .menu {
-            background: #2e7d32;
-            padding: 12px;
-            text-align: center;
-        }
-        .menu a {
-            color: white;
-            text-decoration: none;
-            margin: 0 15px;
-            font-weight: 600;
-            padding: 8px 14px;
-            display: inline-block;
+            gap: 12px;
+            font-size: 14px;
+            font-weight: 500;
             transition: 0.3s;
         }
-        .menu a:hover { background: #1b5e20; border-radius: 4px; }
 
-        /* CONTENIDO */
-        .contenido {
-            max-width: 1100px;
-            margin: 40px auto;
-            background: white;
-            padding: 40px;
-            border: 1px solid #ddd;
-            animation: slideUp 0.8s ease-out;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            background: var(--verde-primario);
+            color: white;
+            border-left: 5px solid var(--dorado-institucional);
         }
-        .contenido h2 { margin-top: 0; color: #2e7d32; }
 
-        /* ACCESOS RAPIDOS */
-        .cuadros {
+        /* ÁREA DE CONTENIDO PRINCIPAL */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: var(--blanco);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--sombra);
+        }
+
+        .user-info { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+        .user-info .avatar { background: var(--verde-primario); color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+
+        .container {
+            padding: 30px;
+            /* Fondo sutil aplicado al contenedor */
+            background: linear-gradient(rgba(244, 247, 246, 0.95), rgba(244, 247, 246, 0.95)), 
+                        url('fondoA.jpg') no-repeat center center fixed;
+            background-size: cover;
+            flex: 1;
+        }
+
+        .welcome-box { margin-bottom: 30px; }
+        .welcome-box h2 { margin: 0; color: var(--verde-oscuro); font-size: 26px; }
+
+        /* GRID DE ACCESOS RÁPIDOS */
+        .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 25px;
-            margin-top: 30px;
         }
-        .card {
-            border: 1px solid #ddd;
-            padding: 25px;
-            text-align: center;
-            background: #f9f9f9;
-            transition: transform 0.3s ease;
-            border-radius: 4px;
-        }
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            border-color: #2e7d32;
-        }
-        .card h3 { color: #2e7d32; margin-bottom: 15px; font-size: 18px; }
-        .card p { font-size: 13px; color: #555; height: 50px; }
-        .card a {
-            display: inline-block;
-            margin-top: 15px;
-            background: #2e7d32;
-            color: white;
-            padding: 10px 15px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 14px;
-            border-radius: 4px;
-        }
-        .card a:hover { background: #1b5e20; }
 
-        footer {
-            background: #1b5e20;
-            color: white;
+        .card {
+            background: var(--blanco);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: var(--sombra);
+            transition: 0.3s;
+            border-bottom: 4px solid transparent;
             text-align: center;
-            padding: 20px;
-            margin-top: 60px;
-            font-size: 14px;
+        }
+
+        .card:hover { transform: translateY(-5px); border-bottom-color: var(--verde-primario); }
+        .card.special { border-bottom-color: var(--dorado-institucional); }
+
+        .card-icon { font-size: 40px; margin-bottom: 15px; display: block; }
+        .card h3 { margin: 10px 0; font-size: 18px; color: var(--verde-oscuro); }
+        .card p { font-size: 13px; color: #777; line-height: 1.5; margin-bottom: 20px; }
+
+        .btn-action {
+            display: inline-block;
+            background: var(--verde-primario);
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            transition: 0.3s;
+        }
+
+        .btn-action:hover { background: var(--verde-oscuro); }
+        .btn-special { background: var(--dorado-institucional); }
+
+        /* ADAPTACIÓN MÓVIL */
+        @media (max-width: 900px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; }
+            .sidebar-menu { display: none; } /* En una app real usarías un menú hamburguesa aquí */
+            .sidebar-header { padding: 15px; }
+            .container { padding: 15px; }
+            header { padding: 10px 20px; }
         }
     </style>
 </head>
 <body>
 
-<header>
-    <div class="logo"><img src="logo.png" alt="Recicladora 4R"></div>
-    <div class="titulo">
-        <h1>Recicladora 4R</h1>
-        <p>Panel de Administración Maestro</p>
+<div class="sidebar">
+    <div class="sidebar-header">
+        <img src="logo.png" alt="Recicladora 4R">
+        <h2>Panel Maestro</h2>
     </div>
-</header>
-
-<div class="menu">
-    <a href="/panel_admin">Inicio</a>
-    <a href="/usuarios">Usuarios</a>
-    <a href="/productos">Inventario</a>
-    <a href="/gestionar_pedidos">Pedidos</a>
-    <a href="/gestion_ventas">Ofertas de Clientes</a> <a href="/reportes">Reportes</a>
-    <a href="/logout">Cerrar sesión</a>
-</div>
-
-<div class="contenido">
-    <h2 id="saludo">Bienvenido Administrador</h2>
-    <p>
-        Has iniciado sesión en el sistema central de <strong>Recicladora 4R</strong>. 
-        Desde este panel tienes control total sobre la operación comercial y logística de la empresa.
-    </p>
-
-    <div class="cuadros">
-        <div class="card">
-            <h3>Usuarios</h3>
-            <p>Control de acceso, roles y registro de personal.</p>
-            <a href="/usuarios">Ver Usuarios</a>
-        </div>
-
-        <div class="card" style="border-top: 4px solid #c5a059;"> <h3>Ofertas de Clientes</h3>
-            <p>Revisar y aprobar materiales que los clientes desean vendernos.</p>
-            <a href="/gestion_ventas" style="background: #c5a059;">Revisar Ofertas</a> </div>
-
-        <div class="card">
-            <h3>Inventario</h3>
-            <p>Carga de materiales, control de stock y pesos en KG.</p>
-            <a href="/productos">Gestionar Stock</a>
-        </div>
-
-        <div class="card">
-            <h3>Ventas y Pedidos</h3>
-            <p>Validar materiales recibidos y cambiar estados de pedidos.</p>
-            <a href="/gestionar_pedidos">Controlar Pedidos</a>
-        </div>
-
-        <div class="card">
-            <h3>Inteligencia</h3>
-            <p>Estadísticas de reciclaje, gráficas y metas logradas.</p>
-            <a href="/reportes">Ver Reportes</a>
-        </div>
+    <div class="sidebar-menu">
+        <a href="/panel_admin" class="active">📊 Resumen General</a>
+        <a href="/usuarios">👥 Gestión de Personal</a>
+        <a href="/productos">📦 Inventario de Stock</a>
+        <a href="/gestionar_pedidos">🚚 Control Logístico</a>
+        <a href="/gestion_ventas">💰 Ofertas de Compra</a>
+        <a href="/reportes">📈 Reportes e Inteligencia</a>
+        <a href="/logout" style="margin-top: 50px; color: #ffab91;">🚪 Cerrar Sesión</a>
     </div>
 </div>
 
-<footer>
-    <p>© 2026 Recicladora 4R | Panel Administrativo Institucional</p>
-</footer>
+<div class="main-content">
+    <header>
+        <div class="breadcrumb">Administración / <strong>Inicio</strong></div>
+        <div class="user-info">
+            <span>Admin Central</span>
+            <div class="avatar">A</div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="welcome-box">
+            <h2>Bienvenido al Sistema de Gestión ♻️</h2>
+            <p>Monitoreo en tiempo real de la operación de **Recicladora 4R**.</p>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card">
+                <span class="card-icon">👥</span>
+                <h3>Usuarios</h3>
+                <p>Administre roles, accesos y perfiles del personal operativo y clientes.</p>
+                <a href="/usuarios" class="btn-action">Gestionar Cuentas</a>
+            </div>
+
+            <div class="card special">
+                <span class="card-icon">💰</span>
+                <h3>Ofertas de Material</h3>
+                <p>Evalúe y apruebe las propuestas de venta enviadas por los ciudadanos.</p>
+                <a href="/gestion_ventas" class="btn-action btn-special">Revisar Propuestas</a>
+            </div>
+
+            <div class="card">
+                <span class="card-icon">📦</span>
+                <h3>Inventario KG</h3>
+                <p>Control exacto del stock acumulado por tipo de material reciclable.</p>
+                <a href="/productos" class="btn-action">Ver Existencias</a>
+            </div>
+
+            <div class="card">
+                <span class="card-icon">🚚</span>
+                <h3>Pedidos y Retiros</h3>
+                <p>Seguimiento de rutas de recolección y estados de procesamiento.</p>
+                <a href="/gestionar_pedidos" class="btn-action">Controlar Rutas</a>
+            </div>
+
+            <div class="card">
+                <span class="card-icon">📈</span>
+                <h3>Estadísticas</h3>
+                <p>Análisis de metas ambientales y reportes de rentabilidad operativa.</p>
+                <a href="/reportes" class="btn-action">Generar Reporte</a>
+            </div>
+        </div>
+    </div>
+
+    <footer style="background: white; color: #777; padding: 20px; text-align: center; font-size: 12px; border-top: 1px solid #eee;">
+        © 2026 Recicladora 4R | Gestión Ambiental y Sostenibilidad Industrial
+    </footer>
+</div>
 
 </body>
 </html>
