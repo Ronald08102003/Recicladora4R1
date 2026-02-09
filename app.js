@@ -158,7 +158,6 @@ app.put('/api/admin/productos/oferta', async (req, res) => {
     }
 });
 
-// Esta ruta llena la tabla de "Gestión de Propuestas de Venta" (Captura 2)
 app.get('/api/admin/ventas-propuestas', async (req, res) => {
     try {
         const r = await pool.query(`
@@ -176,7 +175,6 @@ app.get('/api/admin/ventas-propuestas', async (req, res) => {
     }
 });
 
-// NUEVA RUTA: Complemento para Proposals (Punto 3: Ubicación y Datos para el Admin)
 app.get('/api/admin/propuestas-venta', async (req, res) => {
     try {
         const r = await pool.query(`
@@ -195,7 +193,6 @@ app.get('/api/admin/propuestas-venta', async (req, res) => {
     }
 });
 
-// NUEVA RUTA: Detalle para Ficha de Retiro (Punto 4: Datos exactos Riobamba)
 app.get('/api/admin/propuesta-detalle/:id', async (req, res) => {
     try {
         const r = await pool.query(`
@@ -226,7 +223,7 @@ app.put('/api/admin/propuestas-venta/estado', async (req, res) => {
 app.post('/api/vender-producto', async (req, res) => {
     const { categoria, nombre, peso, id_usuario } = req.body;
     try {
-        await pool.query('INSERT INTO pedidos (id_usuario, fecha, total_peso, estado) VALUES ($1, NOW(), $2, \'Pendience\')', [id_usuario, peso]);
+        await pool.query('INSERT INTO pedidos (id_usuario, fecha, total_peso, estado) VALUES ($1, NOW(), $2, \'Pendiente\')', [id_usuario, peso]);
         res.json({ success: true });
     } catch (err) { res.status(500).json({ success: false }); }
 });
@@ -335,7 +332,7 @@ app.delete('/api/admin/usuarios/:id', async (req, res) => {
     res.json({ success:true });
 });
 
-// ================= REPORTES (Punto 2: Gráficas dinámicas) =================
+// ================= REPORTES =================
 app.get('/api/reportes', async (req, res) => {
     try {
         const materiales = await pool.query('SELECT COUNT(*) FROM productos');
@@ -378,6 +375,41 @@ app.get('/api/admin/reportes-detallados', async (req, res) => {
             grafica: { nombres: lista.rows.map(p => p.nombre), stocks: lista.rows.map(p => p.stock) }
         });
     } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ================= NUEVO: DETALLE DE PEDIDO (FACTURA) =================
+// Esta ruta es la que hace que "ver_detalle.html" muestre los datos reales
+app.get('/api/pedidos/detalle/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        // Consultamos datos del pedido y del usuario unido
+        const pQuery = await pool.query(`
+            SELECT p.id, p.fecha, p.total_peso, p.estado,
+                   u.nombre, u.correo, u.telefono, u.provincia, u.ciudad, u.direccion
+            FROM pedidos p
+            JOIN usuarios u ON p.id_usuario = u.id
+            WHERE p.id = $1
+        `, [id]);
+
+        if (pQuery.rows.length === 0) 
+            return res.status(404).json({ success: false });
+
+        // Consultamos la lista de materiales usando un JOIN con productos
+        const dQuery = await pool.query(`
+            SELECT pr.nombre as material, dp.cantidad, dp.peso_subtotal
+            FROM detalle_pedidos dp
+            JOIN productos pr ON dp.id_producto = pr.id
+            WHERE dp.id_pedido = $1
+        `, [id]);
+
+        res.json({
+            success: true,
+            pedido: pQuery.rows[0],
+            detalles: dQuery.rows
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
 // ================= LOGOUT Y SERVIDOR =================
