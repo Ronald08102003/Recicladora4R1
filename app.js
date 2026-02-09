@@ -11,13 +11,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
 
 let carritoTemporal = {};
+let codigosVerificacion = {}; 
 
-// ================= EMAIL =================
+// ================= EMAIL (DATOS DIRECTOS) =================
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
+        user: 'ronaldvaldiviesoface@gmail.com', //
+        pass: 'devyzpfnsokkecdw' //
     }
 });
 
@@ -41,51 +42,59 @@ app.get('/olvide_password', (req, res) => {
 
 app.get('/panel_admin', (req, res) => res.redirect('/panel'));
 
-// ================= RECUPERACIÓN DE CLAVE (CORREGIDO PARA TU BOTÓN) =================
+// ================= RECUPERACIÓN DE CLAVE FORMAL (DIRECTO) =================
 app.post('/api/enviar-codigo', async (req, res) => {
     const { correo } = req.body;
     try {
-        // Buscamos los datos reales del usuario en la base de datos
+        // Obtenemos los datos del usuario de Supabase
         const r = await pool.query('SELECT nombre, usuario, clave FROM usuarios WHERE correo = $1', [correo]);
         
         if (r.rows.length === 0) {
-            return res.json({ success: false, message: 'Este correo no está registrado.' });
+            return res.json({ success: false, message: 'El correo ingresado no está registrado.' });
         }
 
         const { nombre, usuario, clave } = r.rows[0];
 
-        // Diseño de correo profesional para la Recicladora 4R
+        // Diseño de correo formal e institucional
         const mailOptions = {
-            from: `"Recicladora 4R ♻️" <${process.env.EMAIL_USER}>`,
+            from: '"Recicladora 4R ♻️" <ronaldvaldiviesoface@gmail.com>',
             to: correo,
-            subject: 'Tus credenciales de acceso - Recicladora 4R',
+            subject: 'Recuperación de Credenciales - Recicladora 4R',
             html: `
-                <div style="max-width: 500px; margin: auto; font-family: Arial, sans-serif; border: 1px solid #ddd; border-radius: 10px; overflow: hidden;">
-                    <div style="background: #2e7d32; color: white; padding: 20px; text-align: center;">
-                        <h2 style="margin:0;">Recicladora 4R</h2>
+                <div style="max-width: 600px; margin: auto; font-family: 'Segoe UI', Arial, sans-serif; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden;">
+                    <div style="background-color: #2e7d32; padding: 25px; text-align: center;">
+                        <h1 style="color: white; margin: 0; font-size: 26px;">Recicladora 4R</h1>
+                        <p style="color: #c8e6c9; margin: 5px 0 0 0;">Sistema de Gestión de Reciclaje</p>
                     </div>
-                    <div style="padding: 20px; color: #333;">
-                        <p>Hola <strong>${nombre}</strong>,</p>
-                        <p>Has solicitado recordar tus datos de acceso al sistema.</p>
-                        <div style="background: #f4f4f4; padding: 15px; border-radius: 5px; margin: 10px 0;">
-                            <p style="margin: 5px 0;"><strong>Usuario:</strong> ${usuario}</p>
-                            <p style="margin: 5px 0;"><strong>Contraseña:</strong> ${clave.trim()}</p>
+                    <div style="padding: 30px; background-color: #ffffff;">
+                        <h2 style="color: #1b5e20; margin-top: 0;">Estimado(a) ${nombre},</h2>
+                        <p style="color: #444; line-height: 1.6;">Se ha procesado su solicitud para recuperar los datos de acceso a su cuenta institucional. A continuación, se detallan sus credenciales:</p>
+                        
+                        <div style="background-color: #f5f5f5; padding: 20px; border-left: 6px solid #2e7d32; margin: 25px 0; border-radius: 4px;">
+                            <p style="margin: 8px 0; font-size: 16px;"><strong>Nombre de Usuario:</strong> <span style="color: #2e7d32;">${usuario}</span></p>
+                            <p style="margin: 8px 0; font-size: 16px;"><strong>Contraseña actual:</strong> <span style="color: #2e7d32;">${clave.trim()}</span></p>
                         </div>
-                        <p style="font-size: 12px; color: #666;">Si no solicitaste este correo, por favor ignóralo.</p>
+
+                        <p style="color: #666; font-size: 14px; line-height: 1.5;">Por razones de seguridad, le recomendamos iniciar sesión y actualizar su contraseña desde el panel de configuración de su perfil.</p>
+                        
+                        <div style="text-align: center; margin-top: 35px;">
+                            <a href="https://recicladora4r.onrender.com/login" style="background-color: #2e7d32; color: white; padding: 14px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; font-size: 16px;">Acceder al Sistema</a>
+                        </div>
                     </div>
-                    <div style="background: #eee; padding: 10px; text-align: center; font-size: 11px;">
-                        © 2026 Recicladora 4R - Chimborazo, Ecuador
+                    <div style="background-color: #f8f8f8; padding: 20px; text-align: center; font-size: 13px; color: #888; border-top: 1px solid #eee;">
+                        <p style="margin: 0;">© 2026 Recicladora 4R | UNACH - Riobamba, Ecuador</p>
+                        <p style="margin: 5px 0 0 0;">Este es un mensaje automático, por favor no responda a este correo.</p>
                     </div>
                 </div>
             `
         };
 
         await transporter.sendMail(mailOptions);
-        res.json({ success: true, message: 'La clave ha sido enviada a tu correo.' });
+        res.json({ success: true, message: 'Sus credenciales han sido enviadas correctamente.' });
 
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, message: 'Error al conectar con el servidor de correo.' });
+        console.error("Error en servidor de correo:", err);
+        res.status(500).json({ success: false, message: 'No se pudo enviar el correo. Verifique su conexión.' });
     }
 });
 
