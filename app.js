@@ -117,19 +117,84 @@ app.post('/api/login', async (req, res) => {
 // ================= REGISTRO =================
 app.post('/api/registro', async (req, res) => {
     const { nombre,correo,usuario,clave,telefono,provincia,ciudad,direccion } = req.body;
-    const check = await pool.query(
-        'SELECT id FROM usuarios WHERE usuario=$1 OR correo=$2',
-        [usuario,correo]
-    );
-    if (check.rows.length > 0)
-        return res.json({ success:false });
 
-    await pool.query(`
-        INSERT INTO usuarios
-        (nombre,correo,usuario,clave,rol,telefono,provincia,ciudad,direccion)
-        VALUES ($1,$2,$3,$4,'cliente',$5,$6,$7,$8)
-    `,[nombre,correo,usuario,clave,telefono,provincia,ciudad,direccion]);
-    res.json({ success:true });
+    // ===== VALIDACIONES DE TELÉFONO =====
+    if (!telefono) {
+        return res.json({
+            success: false,
+            message: 'El número de teléfono es obligatorio.'
+        });
+    }
+
+    if (!/^\d+$/.test(telefono)) {
+        return res.json({
+            success: false,
+            message: 'El teléfono solo debe contener números.'
+        });
+    }
+
+    if (telefono.length !== 10) {
+        return res.json({
+            success: false,
+            message: 'El teléfono debe tener exactamente 10 dígitos.'
+        });
+    }
+
+    try {
+        // ===== VALIDAR CORREO =====
+        const correoCheck = await pool.query(
+            'SELECT id FROM usuarios WHERE correo=$1',
+            [correo]
+        );
+
+        if (correoCheck.rows.length > 0) {
+            return res.json({
+                success: false,
+                message: 'El correo ya está registrado.'
+            });
+        }
+
+        // ===== VALIDAR USUARIO =====
+        const usuarioCheck = await pool.query(
+            'SELECT id FROM usuarios WHERE usuario=$1',
+            [usuario]
+        );
+
+        if (usuarioCheck.rows.length > 0) {
+            return res.json({
+                success: false,
+                message: 'El nombre de usuario ya existe.'
+            });
+        }
+
+        // ===== INSERTAR USUARIO =====
+        await pool.query(`
+            INSERT INTO usuarios
+            (nombre,correo,usuario,clave,rol,telefono,provincia,ciudad,direccion)
+            VALUES ($1,$2,$3,$4,'cliente',$5,$6,$7,$8)
+        `, [
+            nombre,
+            correo,
+            usuario,
+            clave,
+            telefono,
+            provincia,
+            ciudad,
+            direccion
+        ]);
+
+        res.json({
+            success: true,
+            message: 'Registro exitoso.'
+        });
+
+    } catch (err) {
+        console.error('Error en registro:', err);
+        res.status(500).json({
+            success: false,
+            message: 'Error en el servidor.'
+        });
+    }
 });
 
 // ================= PRODUCTOS / INVENTARIO =================
@@ -477,4 +542,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log('✅ RECICLADORA 4R ACTIVA EN PUERTO: ' + PORT);
 });
+
 
