@@ -3,65 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recicladora 4R | Recuperar</title>
+    <title>Recicladora 4R | Recuperar Acceso</title>
     <style>
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('fondoA.jpg') no-repeat center center fixed; background-size: cover; height: 100vh; display: flex; align-items: center; justify-content: center; }
-        .card { background: rgba(255,255,255,0.95); padding: 30px; border-radius: 20px; width: 90%; max-width: 380px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.3); }
-        h2 { color: #1b5e20; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1.5px solid #ddd; border-radius: 10px; box-sizing: border-box; }
-        button { width: 100%; padding: 14px; background: #2e7d32; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        body { 
+            margin: 0; 
+            font-family: 'Segoe UI', sans-serif; 
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('fondoA.jpg') no-repeat center center fixed; 
+            background-size: cover; 
+            height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        .card { 
+            background: rgba(255,255,255,0.95); 
+            padding: 30px; 
+            border-radius: 20px; 
+            width: 90%; 
+            max-width: 400px; 
+            text-align: center; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3); 
+        }
+        h2 { color: #1b5e20; margin-bottom: 10px; }
+        p { color: #555; font-size: 15px; line-height: 1.4; }
+        input { 
+            width: 100%; 
+            padding: 12px; 
+            margin: 15px 0; 
+            border: 1.5px solid #ddd; 
+            border-radius: 10px; 
+            box-sizing: border-box; 
+            outline: none;
+        }
+        input:focus { border-color: #2e7d32; }
+        button { 
+            width: 100%; 
+            padding: 14px; 
+            background: #2e7d32; 
+            color: white; 
+            border: none; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            transition: 0.3s; 
+        }
         button:hover { background: #1b5e20; }
-        #mensaje { margin-top: 15px; font-size: 14px; font-weight: 500; }
+        #mensaje { 
+            margin-top: 20px; 
+            font-size: 14px; 
+            font-weight: bold; 
+            min-height: 20px;
+        }
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #2e7d32;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
     <div class="card">
-        <h2>Recuperar Clave</h2>
-        <div id="formulario">
-            <p>Ingresa tu correo institucional para recibir tu contraseña actual.</p>
-            <input type="email" id="correo" placeholder="correo@ejemplo.com">
-            <button onclick="enviarClave()">Enviar mi Contraseña</button>
+        <h2>Recuperar Cuenta</h2>
+        <div id="contenedor-formulario">
+            <p>Ingresa tu correo institucional. Te enviaremos tu usuario y contraseña actual de inmediato.</p>
+            <input type="email" id="correo" placeholder="ejemplo@gmail.com" required>
+            <button id="btnEnviar" onclick="enviarClave()">Enviar mis datos</button>
         </div>
+        
         <p id="mensaje"></p>
-        <hr style="border: 0.5px solid #eee; margin: 20px 0;">
-        <a href="/login" style="color:#2e7d32; text-decoration:none; font-size:13px;">Volver al Login</a>
+
+        <div style="margin-top: 25px; border-top: 1px solid #eee; padding-top: 15px;">
+            <a href="/login" style="color:#2e7d32; text-decoration:none; font-size:14px; font-weight: 500;">← Volver al Inicio de Sesión</a>
+        </div>
     </div>
 
     <script>
         async function enviarClave() {
-            const correo = document.getElementById('correo').value;
+            const correoInput = document.getElementById('correo');
+            const correo = correoInput.value.trim();
             const msj = document.getElementById('mensaje');
-            
-            if(!correo) {
-                msj.style.color = "red";
-                msj.innerText = "Por favor, ingresa tu correo.";
+            const btn = document.getElementById('btnEnviar');
+
+            if (!correo) {
+                msj.style.color = "#d32f2f";
+                msj.innerText = "⚠️ Por favor, escribe tu correo electrónico.";
                 return;
             }
 
-            msj.innerText = "Buscando en la base de datos...";
-            msj.style.color = "blue";
+            // Estado de carga
+            btn.disabled = true;
+            btn.style.opacity = "0.7";
+            msj.style.color = "#1565c0";
+            msj.innerHTML = '<div class="loader"></div> Verificando en el sistema...';
 
             try {
-                // Usamos la misma ruta del servidor que configuramos antes
                 const res = await fetch('/api/enviar-codigo', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ correo })
                 });
 
                 const data = await res.json();
 
-                if(data.success) {
-                    msj.style.color = "green";
-                    msj.innerText = "✅ La clave ha sido enviada a tu correo.";
+                if (data.success) {
+                    msj.style.color = "#2e7d32";
+                    msj.innerText = "✅ ¡Listo! Revisa tu bandeja de entrada.";
+                    correoInput.value = ""; // Limpiar campo
+                    btn.innerText = "Correo Enviado";
                 } else {
-                    msj.style.color = "red";
-                    msj.innerText = "❌ " + (data.message || "Error al procesar la solicitud.");
+                    msj.style.color = "#d32f2f";
+                    msj.innerText = "❌ " + (data.message || "Error al buscar el correo.");
+                    btn.disabled = false;
+                    btn.style.opacity = "1";
                 }
             } catch (error) {
-                console.error("Error:", error);
-                msj.style.color = "red";
-                msj.innerText = "Error de conexión con el servidor.";
+                console.error("Error en la petición:", error);
+                msj.style.color = "#d32f2f";
+                msj.innerText = "❌ Error de conexión. Inténtalo de nuevo.";
+                btn.disabled = false;
+                btn.style.opacity = "1";
             }
         }
     </script>
