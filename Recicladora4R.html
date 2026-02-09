@@ -23,7 +23,7 @@
         body {
             margin: 0;
             font-family: 'Inter', sans-serif;
-            /* Se utiliza fondoA.jpg como fondo principal */
+            /* Se mantiene el fondo solicitado */
             background: linear-gradient(rgba(249, 251, 249, 0.85), rgba(249, 251, 249, 0.85)), 
                         url('fondoA.jpg') no-repeat center center fixed;
             background-size: cover;
@@ -45,10 +45,10 @@
             z-index: 1000;
         }
 
-        .logo-container { display: flex; align-items: center; gap: 15px; flex: 1; }
+        .logo-container { display: flex; align-items: center; gap: 15px; }
         .logo-container img { height: 70px; }
 
-        nav { display: flex; gap: 25px; align-items: center; justify-content: flex-end; flex: 2; }
+        nav { display: flex; gap: 25px; align-items: center; }
         nav a { text-decoration: none; color: var(--text-main); font-weight: 600; font-size: 14px; }
 
         .btn-portal {
@@ -56,50 +56,51 @@
             color: white !important;
             padding: 10px 22px;
             border-radius: 50px;
+            text-decoration: none;
         }
 
         .container { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
         
         section {
             background: rgba(255, 255, 255, 0.96);
-            padding: 60px;
+            padding: 40px;
             border-radius: 15px;
             margin-bottom: 50px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.05);
             border-top: 5px solid var(--primary-green);
         }
 
-        h2 { font-size: 30px; color: var(--dark-green); margin-bottom: 25px; display: flex; align-items: center; gap: 12px; }
+        h2 { font-size: 28px; color: var(--dark-green); margin-bottom: 25px; display: flex; align-items: center; gap: 12px; }
 
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: start; }
-
+        /* GRID DE COMUNICADOS CON IMÁGENES CORREGIDAS */
+        .news-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        
         .news-card {
-            border-left: 5px solid var(--primary-green);
             background: var(--light-green);
-            margin-bottom: 15px;
-            border-radius: 10px;
+            border-radius: 12px;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-left: 5px solid var(--primary-green);
         }
 
-        /* Ajuste para bajar la foto y que se vea la cara */
         .news-card img {
             width: 100%;
             height: 300px;
             object-fit: cover;
-            object-position: top center; /* Muestra la parte superior (cara) de la imagen */
-            display: block;
+            /* Ajuste para bajar la foto y que se vea la cara */
+            object-position: top; 
         }
 
-        .news-content { padding: 20px; }
+        .news-text { padding: 20px; font-size: 14px; font-weight: 500; }
 
+        .map-section { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
         .map-frame { border-radius: 15px; overflow: hidden; border: 5px solid white; box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
 
-        footer { background: #121212; color: #ecf0f1; padding: 60px 10% 30px; text-align: center; }
+        footer { background: #121212; color: #ffffff; padding: 40px; text-align: center; }
 
         @media (max-width: 768px) {
-            .info-grid { grid-template-columns: 1fr; }
-            header { flex-direction: column; text-align: center; }
-            nav { margin-top: 20px; flex-wrap: wrap; justify-content: center; }
+            .news-grid, .map-section { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -109,12 +110,11 @@
     <div class="logo-container">
         <img src="logo.png" alt="Recicladora 4R">
         <div class="brand-text">
-            <h1>Recicladora 4R</h1>
-            <p>Economía Circular y Sostenible</p>
+            <strong>Recicladora 4R</strong><br>
+            <small>ECONOMÍA CIRCULAR Y SOSTENIBLE</small>
         </div>
     </div>
     <nav>
-        <a href="#quienes">Institución</a>
         <a href="#noticias">Comunicados</a>
         <a href="#ubicacion">Ubicación</a>
         <a href="login.html" class="btn-portal">Acceso Personal</a>
@@ -124,33 +124,33 @@
 <main class="container">
     <section id="noticias">
         <h2>♻️ Comunicados Oficiales</h2>
-        <div class="info-grid">
+        <div class="news-grid">
             <div class="news-card">
-                <img src="noticia1.jpg" alt="Inauguración planta">
-                <div class="news-content">
-                    <p><strong>02 FEB 2026:</strong> Inauguración de nuestra nueva planta de procesamiento de plásticos de alta densidad en Riobamba.</p>
+                <img src="moreno.png" alt="Inauguración planta">
+                <div class="news-text">
+                    <strong>02 FEB 2026:</strong> Inauguración de nuestra nueva planta de procesamiento de plásticos de alta densidad en Riobamba.
                 </div>
             </div>
             <div class="news-card">
-                <img src="noticia2.jpg" alt="Canales digitales">
-                <div class="news-content">
-                    <p><strong>25 ENE 2026:</strong> Apertura de nuevos canales digitales para optimizar la recepción de propuestas de venta.</p>
+                <img src="recicladora.png" alt="Gestión de residuos">
+                <div class="news-text">
+                    <strong>25 ENE 2026:</strong> Apertura de nuevos canales digitales para optimizar la recepción de propuestas de venta.
                 </div>
             </div>
         </div>
     </section>
 
     <section id="ubicacion">
-        <div class="info-grid">
+        <div class="map-section">
             <div>
                 <h2>♻️ Nuestra Ubicación</h2>
-                <p>Nuestra planta principal se encuentra estratégicamente ubicada en Riobamba.</p>
-                <p><strong>Dirección:</strong> Av. Edelberto Bonilla Oleas, Riobamba.</p>
-                <p><strong>Atención:</strong> Lunes a Domingo (07:00 - 19:00).</p>
+                <p>Nuestra planta principal se encuentra estratégicamente ubicada en Riobamba para facilitar el acceso a la ciudadanía.</p>
+                <p><strong>📍 Dirección:</strong> Av. Edelberto Bonilla Oleas, Riobamba.</p>
+                <p><strong>⏰ Atención:</strong> Lunes a Domingo (07:00 - 19:00).</p>
             </div>
             <div class="map-frame">
-                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3989.117106363533!2d-78.6593532!3d-1.6732483!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91d307777eb3dde3%3A0x5aa447ee72ed9df2!2sRecicladora%204R!5e0!3m2!1ses-419!2sec!4v1707436800000!5m2!1ses-419!2sec" 
-                        width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3988.0860088895884!2d-78.63097499999999!3d-1.6884561!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91d3a9c17e3eddc3%3A0x5aa447ee72ed9df2!2sRecicladora%204R!5e0!3m2!1ses!2sec!4v1770646239511!5m2!1ses!2sec" 
+                width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
             </div>
         </div>
     </section>
