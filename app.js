@@ -43,25 +43,58 @@ app.get('/olvide_password', (req, res) => {
 
 app.get('/panel_admin', (req, res) => res.redirect('/panel'));
 
-// ================= RESTABLECIMIENTO DE CONTRASEÑA (NUEVO) =================
+// ================= RESTABLECIMIENTO DE CONTRASEÑA (ACTUALIZADO CON DISEÑO) =================
 app.post('/api/enviar-codigo', async (req, res) => {
     const { correo } = req.body;
     try {
-        const r = await pool.query('SELECT id FROM usuarios WHERE correo = $1', [correo]);
-        if (r.rows.length === 0) return res.json({ success: false, message: 'Correo no registrado' });
+        // Obtenemos los datos completos del usuario para el correo personalizado
+        const r = await pool.query('SELECT nombre, usuario, clave FROM usuarios WHERE correo = $1', [correo]);
+        
+        if (r.rows.length === 0) {
+            return res.json({ success: false, message: 'Este correo no pertenece a ningún usuario registrado.' });
+        }
 
-        const codigo = Math.floor(100000 + Math.random() * 900000);
-        codigosVerificacion[correo] = codigo;
+        const { nombre, usuario, clave } = r.rows[0];
 
+        // Enviamos el correo con formato profesional
         await transporter.sendMail({
-            from: process.env.EMAIL_USER,
+            from: `"Recicladora 4R ♻️" <${process.env.EMAIL_USER}>`,
             to: correo,
-            subject: 'Código de Seguridad - Recicladora 4R ♻️',
-            html: `<h3>Tu código es: <b style="color: #2e7d32; font-size: 24px;">${codigo}</b></h3>
-                   <p>Usa este código para cambiar tu contraseña institucional.</p>`
+            subject: 'Recuperación de Acceso - Recicladora 4R',
+            html: `
+                <div style="max-width: 600px; margin: auto; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; border: 1px solid #e0e0e0; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                    <div style="background-color: #2e7d32; padding: 20px; text-align: center;">
+                        <h1 style="color: white; margin: 0; font-size: 24px;">Recicladora 4R</h1>
+                        <p style="color: #e8f5e9; margin: 5px 0 0 0;">Gestión de Residuos Sólidos</p>
+                    </div>
+                    <div style="padding: 30px; background-color: #ffffff;">
+                        <h2 style="color: #1b5e20;">Hola, ${nombre}</h2>
+                        <p style="color: #555; line-height: 1.6;">Has solicitado recuperar tus credenciales de acceso al sistema. Aquí tienes los detalles de tu cuenta:</p>
+                        
+                        <div style="background-color: #f9f9f9; padding: 20px; border-left: 5px solid #2e7d32; margin: 20px 0;">
+                            <p style="margin: 5px 0;"><strong>Usuario:</strong> <span style="color: #2e7d32;">${usuario}</span></p>
+                            <p style="margin: 5px 0;"><strong>Contraseña actual:</strong> <span style="color: #2e7d32;">${clave.trim()}</span></p>
+                        </div>
+
+                        <p style="color: #555; line-height: 1.6;">Te recomendamos ingresar al sistema y, si lo deseas, cambiar tu contraseña desde tu panel de perfil para mayor seguridad.</p>
+                        
+                        <div style="text-align: center; margin-top: 30px;">
+                            <a href="https://recicladora4r.onrender.com/login" style="background-color: #2e7d32; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Ir al Sistema</a>
+                        </div>
+                    </div>
+                    <div style="background-color: #f1f1f1; padding: 15px; text-align: center; font-size: 12px; color: #888;">
+                        <p style="margin: 0;">© 2026 Recicladora 4R - UNACH. Todos los derechos reservados.</p>
+                        <p style="margin: 5px 0 0 0;">Riobamba, Ecuador</p>
+                    </div>
+                </div>
+            `
         });
-        res.json({ success: true });
-    } catch (err) { res.status(500).json({ success: false }); }
+        
+        res.json({ success: true, message: 'Tus credenciales han sido enviadas con éxito.' });
+    } catch (err) { 
+        console.error("Error al enviar correo:", err);
+        res.status(500).json({ success: false, message: 'No pudimos procesar el envío en este momento.' }); 
+    }
 });
 
 app.post('/api/restablecer-final', async (req, res) => {
@@ -442,7 +475,7 @@ app.get('/api/pedidos/detalle/:id', async (req, res) => {
         res.json({
             success: true,
             pedido: pQuery.rows[0],
-            detallles: dQuery.rows
+            detalles: dQuery.rows
         });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
@@ -459,4 +492,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log('✅ RECICLADORA 4R ACTIVA EN PUERTO: ' + PORT);
 });
-
